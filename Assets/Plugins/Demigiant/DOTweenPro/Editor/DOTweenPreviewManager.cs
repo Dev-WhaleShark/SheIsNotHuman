@@ -16,9 +16,7 @@ namespace DG.DOTweenEditor
 {
     public static class DOTweenPreviewManager
     {
-#pragma warning disable UDR0001
         static bool _previewOnlyIfSetToAutoPlay = true;
-#pragma warning restore UDR0001
         static readonly Dictionary<DOTweenAnimation,TweenInfo> _AnimationToTween = new Dictionary<DOTweenAnimation,TweenInfo>();
         static readonly List<DOTweenAnimation> _TmpKeys = new List<DOTweenAnimation>();
 
@@ -30,6 +28,8 @@ namespace DG.DOTweenEditor
         public static bool PreviewGUI(DOTweenAnimation src)
         {
             if (EditorApplication.isPlaying) return false;
+
+            Styles.Init();
 
             bool isPreviewing = _AnimationToTween.Count > 0;
             bool isPreviewingThis = isPreviewing && _AnimationToTween.ContainsKey(src);
@@ -144,15 +144,11 @@ namespace DG.DOTweenEditor
         static void StartupGlobalPreview()
         {
             DOTweenEditorPreview.Start();
-#pragma warning disable UDR0001
 #if UNITY_4_3 || UNITY_4_4 || UNITY_4_5 || UNITY_4_6 || UNITY_5
-            UnityEditor.EditorApplication.playmodeStateChanged -= StopAllPreviews;
             UnityEditor.EditorApplication.playmodeStateChanged += StopAllPreviews;
 #else
-            UnityEditor.EditorApplication.playModeStateChanged -= StopAllPreviews;
             UnityEditor.EditorApplication.playModeStateChanged += StopAllPreviews;
 #endif
-#pragma warning restore UDR0001
 //            EditorApplication.playmodeStateChanged += StopAllPreviews;
         }
 
@@ -247,12 +243,16 @@ namespace DG.DOTweenEditor
 
         static class Styles
         {
-#pragma warning disable UDR0001
-            public static GUIStyle previewBox, previewLabel, btOption, btPreview, previewStatusLabel;
-#pragma warning restore UDR0001
+            static bool _initialized;
 
-            static Styles()
+            public static GUIStyle previewBox, previewLabel, btOption, btPreview, previewStatusLabel;
+
+            public static void Init()
             {
+                if (_initialized) return;
+
+                _initialized = true;
+
                 previewBox = new GUIStyle(GUI.skin.box).Clone().Padding(1, 1, 0, 3)
                     .Background(DeStylePalette.squareBorderCurved_darkBorders).Border(7, 7, 7, 7);
                 previewLabel = new GUIStyle(GUI.skin.label).Clone(10, FontStyle.Bold).Padding(1, 0, 3, 0).Margin(3, 6, 0, 0).StretchWidth(false);

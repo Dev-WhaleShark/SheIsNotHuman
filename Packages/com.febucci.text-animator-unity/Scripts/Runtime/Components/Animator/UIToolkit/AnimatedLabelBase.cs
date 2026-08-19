@@ -306,11 +306,14 @@ namespace Febucci.TextAnimatorForUnity.UIToolkit
             animator.effectsDatabase = BehaviorsDatabase;
             animator.stylesDatabase = StyleSheetDatabase;
 
+            ResetAnimationTime();
             RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
         }
 
         void OnAttachedToPanel(AttachToPanelEvent evt)
         {
+            ResetAnimationTime();
+
             if (Application.isPlaying && Typewriter != null)
             {
                 Typewriter.ActionProviders = GetActionProviders();
@@ -393,6 +396,8 @@ namespace Febucci.TextAnimatorForUnity.UIToolkit
 
         float lastTime = 0;
         TypewriterSettings settings;
+
+        void ResetAnimationTime() => lastTime = GetCurrentTime();
 
         protected void Animate()
         {
