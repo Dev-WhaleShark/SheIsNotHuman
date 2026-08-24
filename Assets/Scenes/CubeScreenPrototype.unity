@@ -146,7 +146,7 @@ Transform:
   m_GameObject: {fileID: 51768657}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: -0.00000004371139}
-  m_LocalPosition: {x: 0.000000069938224, y: 0, z: -4}
+  m_LocalPosition: {x: 0, y: 0, z: -1.9000001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -231,7 +231,7 @@ Camera:
   far clip plane: 2
   field of view: 60
   orthographic: 1
-  orthographic size: 3.6000001
+  orthographic size: 2.7
   m_Depth: -16
   m_CullingMask:
     serializedVersion: 2
@@ -772,8 +772,8 @@ Transform:
   m_GameObject: {fileID: 124189601}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 3.596, z: 4.768372e-10}
-  m_LocalScale: {x: 9.6, y: 9.600002, z: 1}
+  m_LocalPosition: {x: 0, y: 2.696, z: 0}
+  m_LocalScale: {x: 9.6, y: 5.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2003119586}
@@ -791,7 +791,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeFaceLensDisplay
   sourceTexture: {fileID: 8400000, guid: 8d9271843187e47438a2406f47f0ff71, type: 2}
-  aspect: 0.9999998
+  aspect: 1.7777778
   lensCenter: {x: 0.5, y: 0.5}
   distortion: -0.08
   edgeDistortion: 0.02
@@ -973,7 +973,7 @@ RectTransform:
   m_GameObject: {fileID: 216534235}
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.008, y: 0.008, z: 0.008}
+  m_LocalScale: {x: 0.0045, y: 0.0045, z: 0.0045}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1837749917}
@@ -990,7 +990,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -4.8, y: 0}
-  m_SizeDelta: {x: 1200, y: 900}
+  m_SizeDelta: {x: 1200, y: 1200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &216534237
 BoxCollider:
@@ -1011,7 +1011,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1200, y: 900, z: 4}
+  m_Size: {x: 1200, y: 1200, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &216534239
 MonoBehaviour:
@@ -1106,8 +1106,8 @@ Transform:
   m_GameObject: {fileID: 239493921}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -4.796, y: 0, z: 4.768372e-10}
-  m_LocalScale: {x: 9.600002, y: 7.2000003, z: 1}
+  m_LocalPosition: {x: -4.796, y: 0, z: 0}
+  m_LocalScale: {x: 5.4, y: 5.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2003119586}
@@ -1125,7 +1125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeFaceLensDisplay
   sourceTexture: {fileID: 8400000, guid: f2c7204014aa3554492f4f101b6ab21f, type: 2}
-  aspect: 1.3333336
+  aspect: 1
   lensCenter: {x: 0.5, y: 0.5}
   distortion: -0.12
   edgeDistortion: 0.03
@@ -2386,7 +2386,7 @@ Transform:
   m_GameObject: {fileID: 547091026}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 4, y: 0, z: 0.00000009536743}
+  m_LocalPosition: {x: 4, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2471,7 +2471,7 @@ Camera:
   far clip plane: 1.6
   field of view: 60
   orthographic: 1
-  orthographic size: 3.6000001
+  orthographic size: 2.7
   m_Depth: -19
   m_CullingMask:
     serializedVersion: 2
@@ -2607,8 +2607,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 3.6}
-  m_SizeDelta: {x: 1200, y: 1200}
+  m_AnchoredPosition: {x: 0, y: 2.7}
+  m_SizeDelta: {x: 1200, y: 675}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &578416708
 BoxCollider:
@@ -2629,7 +2629,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1200, y: 1200, z: 4}
+  m_Size: {x: 1200, y: 675, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &578416710
 MonoBehaviour:
@@ -2851,7 +2851,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 627426880}
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
-  m_LocalPosition: {x: 0, y: 0, z: -4.8}
+  m_LocalPosition: {x: 0, y: 0, z: -2.7}
   m_LocalScale: {x: 0.008, y: 0.008, z: 0.008}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2869,7 +2869,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 900}
+  m_SizeDelta: {x: 1200, y: 675}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &627426882
 BoxCollider:
@@ -2890,7 +2890,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1200, y: 900, z: 4}
+  m_Size: {x: 1200, y: 675, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &627426884
 MonoBehaviour:
@@ -3798,8 +3798,8 @@ Transform:
   m_GameObject: {fileID: 803000650}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: -0.00000004371139}
-  m_LocalPosition: {x: 3.496911e-10, y: 0, z: -4.796}
-  m_LocalScale: {x: 9.6, y: 7.2000003, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -2.696}
+  m_LocalScale: {x: 9.6, y: 5.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2003119586}
@@ -3817,7 +3817,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeFaceLensDisplay
   sourceTexture: {fileID: 8400000, guid: 4dd2aed224dff044f80ecc8ded580f16, type: 2}
-  aspect: 1.3333334
+  aspect: 1.7777778
   lensCenter: {x: 0.5, y: 0.5}
   distortion: 0.16
   edgeDistortion: -0.03
@@ -4330,7 +4330,7 @@ Transform:
   m_GameObject: {fileID: 857650016}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 2.7999997, z: 0.00000009536743}
+  m_LocalPosition: {x: 0, y: 1.9000001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4415,7 +4415,7 @@ Camera:
   far clip plane: 2
   field of view: 60
   orthographic: 1
-  orthographic size: 4.800001
+  orthographic size: 2.7
   m_Depth: -15
   m_CullingMask:
     serializedVersion: 2
@@ -4616,8 +4616,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeScreenController
   turnDuration: 0.45
   dragThreshold: 80
-  topFieldOfView: 110
-  bottomFieldOfView: 72.5
+  frontBackFieldOfView: 95
+  sideFieldOfView: 63
+  topFieldOfView: 95
+  bottomFieldOfView: 90.1
   turnEase: 4
 --- !u!4 &907501337
 Transform:
@@ -4801,8 +4803,8 @@ Transform:
   m_GameObject: {fileID: 919120413}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 4.796, y: 0, z: 4.768372e-10}
-  m_LocalScale: {x: 9.600002, y: 7.2000003, z: 1}
+  m_LocalPosition: {x: 4.796, y: 0, z: 0}
+  m_LocalScale: {x: 5.4, y: 5.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2003119586}
@@ -4820,7 +4822,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeFaceLensDisplay
   sourceTexture: {fileID: 8400000, guid: ac3615ff70ea1b746b3ddfe072d68dfa, type: 2}
-  aspect: 1.3333334
+  aspect: 1
   lensCenter: {x: 0.52, y: 0.48}
   distortion: 0.22
   edgeDistortion: -0.05
@@ -4986,7 +4988,7 @@ Transform:
   m_GameObject: {fileID: 1041888244}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -2.7999997, z: 0.00000009536743}
+  m_LocalPosition: {x: 0, y: -1.9000001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5071,7 +5073,7 @@ Camera:
   far clip plane: 1.6
   field of view: 60
   orthographic: 1
-  orthographic size: 4.800001
+  orthographic size: 2.7
   m_Depth: -18
   m_CullingMask:
     serializedVersion: 2
@@ -6183,7 +6185,7 @@ Camera:
     height: 1
   near clip plane: 0.03
   far clip plane: 100
-  field of view: 78
+  field of view: 95
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -6769,8 +6771,8 @@ Transform:
   m_GameObject: {fileID: 1213879300}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4.796}
-  m_LocalScale: {x: 9.6, y: 7.2000003, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 2.696}
+  m_LocalScale: {x: 9.6, y: 5.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2003119586}
@@ -6788,7 +6790,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeFaceLensDisplay
   sourceTexture: {fileID: 8400000, guid: 18722936895887e4d88c4894fd06a633, type: 2}
-  aspect: 1.3333334
+  aspect: 1.7777778
   lensCenter: {x: 0.5, y: 0.5}
   distortion: -0.18
   edgeDistortion: 0.05
@@ -6879,7 +6881,7 @@ Transform:
   m_GameObject: {fileID: 1242184440}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -4, y: 0, z: 0.00000009536743}
+  m_LocalPosition: {x: -4, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6964,7 +6966,7 @@ Camera:
   far clip plane: 2
   field of view: 60
   orthographic: 1
-  orthographic size: 3.6000001
+  orthographic size: 2.7
   m_Depth: -17
   m_CullingMask:
     serializedVersion: 2
@@ -7159,7 +7161,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1339470204}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4.8}
+  m_LocalPosition: {x: 0, y: 0, z: 2.7}
   m_LocalScale: {x: 0.008, y: 0.008, z: 0.008}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7177,7 +7179,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 900}
+  m_SizeDelta: {x: 1200, y: 675}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &1339470206
 BoxCollider:
@@ -7198,7 +7200,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1200, y: 900, z: 4}
+  m_Size: {x: 1200, y: 675, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1339470208
 MonoBehaviour:
@@ -7391,7 +7393,7 @@ Camera:
     height: 1
   near clip plane: 0.03
   far clip plane: 100
-  field of view: 78
+  field of view: 95
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -8900,7 +8902,7 @@ RectTransform:
   m_GameObject: {fileID: 1784808631}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.008, y: 0.008, z: 0.008}
+  m_LocalScale: {x: 0.0045, y: 0.0045, z: 0.0045}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1155823744}
@@ -8917,7 +8919,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 4.8, y: 0}
-  m_SizeDelta: {x: 1200, y: 900}
+  m_SizeDelta: {x: 1200, y: 1200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &1784808633
 BoxCollider:
@@ -8938,7 +8940,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1200, y: 900, z: 4}
+  m_Size: {x: 1200, y: 1200, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1784808635
 MonoBehaviour:
@@ -9555,7 +9557,7 @@ Transform:
   m_GameObject: {fileID: 1953222134}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4}
+  m_LocalPosition: {x: 0, y: 0, z: 1.9000001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9640,7 +9642,7 @@ Camera:
   far clip plane: 1.6
   field of view: 60
   orthographic: 1
-  orthographic size: 3.6000001
+  orthographic size: 2.7
   m_Depth: -20
   m_CullingMask:
     serializedVersion: 2
@@ -10087,8 +10089,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -3.6}
-  m_SizeDelta: {x: 1200, y: 1200}
+  m_AnchoredPosition: {x: 0, y: -2.7}
+  m_SizeDelta: {x: 1200, y: 675}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &2005205018
 BoxCollider:
@@ -10109,7 +10111,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1200, y: 1200, z: 4}
+  m_Size: {x: 1200, y: 675, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2005205020
 MonoBehaviour:
@@ -10279,8 +10281,8 @@ Transform:
   m_GameObject: {fileID: 2037087300}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -3.596, z: 4.768372e-10}
-  m_LocalScale: {x: 9.6, y: 9.600002, z: 1}
+  m_LocalPosition: {x: 0, y: -2.696, z: 0}
+  m_LocalScale: {x: 9.6, y: 5.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2003119586}
@@ -10298,7 +10300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.CubeScreen.CubeFaceLensDisplay
   sourceTexture: {fileID: 8400000, guid: 538288d518a9116488c931b84173534c, type: 2}
-  aspect: 1
+  aspect: 1.7777778
   lensCenter: {x: 0.5, y: 0.5}
   distortion: 0
   edgeDistortion: 0

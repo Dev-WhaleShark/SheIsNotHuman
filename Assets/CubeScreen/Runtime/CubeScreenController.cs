@@ -31,9 +31,11 @@ namespace SheIsNotHuman.CubeScreen
 
         [SerializeField, Min(0.05f)] private float turnDuration = 0.45f;
         [SerializeField, Min(1f)] private float dragThreshold = 80f;
+        [SerializeField, Range(60f, 130f)] private float frontBackFieldOfView = 95f;
+        [SerializeField, Range(45f, 100f)] private float sideFieldOfView = 63f;
         [FormerlySerializedAs("verticalFieldOfView")]
-        [SerializeField, Range(60f, 130f)] private float topFieldOfView = 110f;
-        [SerializeField, Range(45f, 100f)] private float bottomFieldOfView = 72.5f;
+        [SerializeField, Range(60f, 130f)] private float topFieldOfView = 95f;
+        [SerializeField, Range(45f, 100f)] private float bottomFieldOfView = 90.1f;
         [SerializeField] private Ease turnEase = Ease.InOutSine;
 
         private Sequence _turnSequence;
@@ -43,7 +45,6 @@ namespace SheIsNotHuman.CubeScreen
         private VerticalView _verticalView;
         private Camera _viewerCamera;
         private Camera _eventCamera;
-        private float _horizontalFieldOfView;
         private float _targetFieldOfView;
 
 #if ENABLE_INPUT_SYSTEM
@@ -69,8 +70,8 @@ namespace SheIsNotHuman.CubeScreen
             _verticalView = VerticalView.Horizontal;
             _viewerCamera = Camera.main;
             _eventCamera = transform.Find("UIEventCamera")?.GetComponent<Camera>();
-            _horizontalFieldOfView = _viewerCamera != null ? _viewerCamera.fieldOfView : 78f;
-            _targetFieldOfView = _horizontalFieldOfView;
+            _targetFieldOfView = GetHorizontalFieldOfView(_horizontalView);
+            ApplyFieldOfView(_targetFieldOfView);
         }
 
         private void OnDisable()
@@ -120,7 +121,7 @@ namespace SheIsNotHuman.CubeScreen
             else if (_verticalView == VerticalView.Bottom)
             {
                 _verticalView = VerticalView.Horizontal;
-                BeginTurn(_horizontalRotation, _horizontalFieldOfView);
+                BeginTurn(_horizontalRotation, GetHorizontalFieldOfView(_horizontalView));
             }
         }
 
@@ -140,7 +141,7 @@ namespace SheIsNotHuman.CubeScreen
             else if (_verticalView == VerticalView.Top)
             {
                 _verticalView = VerticalView.Horizontal;
-                BeginTurn(_horizontalRotation, _horizontalFieldOfView);
+                BeginTurn(_horizontalRotation, GetHorizontalFieldOfView(_horizontalView));
             }
         }
 
@@ -156,7 +157,7 @@ namespace SheIsNotHuman.CubeScreen
             int direction = angle > 0f ? 1 : -1;
             _horizontalView = (HorizontalView)(((int)_horizontalView + direction + 4) % 4);
             _horizontalRotation = destination;
-            BeginTurn(destination, _horizontalFieldOfView);
+            BeginTurn(destination, GetHorizontalFieldOfView(_horizontalView));
         }
 
         private Quaternion CreateVerticalDestination(float angle)
@@ -293,8 +294,17 @@ namespace SheIsNotHuman.CubeScreen
         {
             turnDuration = Mathf.Max(0.05f, turnDuration);
             dragThreshold = Mathf.Max(1f, dragThreshold);
+            frontBackFieldOfView = Mathf.Clamp(frontBackFieldOfView, 60f, 130f);
+            sideFieldOfView = Mathf.Clamp(sideFieldOfView, 45f, 100f);
             topFieldOfView = Mathf.Clamp(topFieldOfView, 60f, 130f);
             bottomFieldOfView = Mathf.Clamp(bottomFieldOfView, 45f, 100f);
+        }
+
+        private float GetHorizontalFieldOfView(HorizontalView view)
+        {
+            return view == HorizontalView.Front || view == HorizontalView.Back
+                ? frontBackFieldOfView
+                : sideFieldOfView;
         }
     }
 }

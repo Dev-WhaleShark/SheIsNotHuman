@@ -7,15 +7,16 @@
 - Unity: 6000.5.4f1 / URP
 - UI: World Space uGUI + TextMeshPro
 - 최종 출력: 640×360 RenderTexture를 Point 필터로 확대하는 16:9 픽셀 화면
-- 기본 가로 화면 FOV: 78
-- Top FOV: 110
-- Bottom FOV: 72.5
+- Front/Back FOV: 95
+- Right/Left FOV: 63
+- Top FOV: 95
+- Bottom FOV: 90.1
 - 화면 전환: 90도, 0.45초, DOTween `Ease.InOutSine`
 - 공통 버튼 Fade: 0.2초, DOTween `Ease.OutQuad`
 - 마우스 가장자리 감지 폭: 44픽셀
 - 오른쪽 마우스 드래그 최소 거리: 80픽셀
 
-Bottom은 현재 닫힌 육면체의 앞·뒤 모서리를 모두 연결하기 위해 1200×1200 물리 면을 유지한다. 가로 화면 FOV는 기존 78로 복구했다. Top/Bottom만 직사각형으로 줄이는 방식은 Front 접합부 또는 Bottom 정면 화면 중 한쪽에 틈이 생기는 것이 확인되어 아직 씬에 적용하지 않았다.
+Front/Back/Top/Bottom은 1200×675 Canvas, 9.6×5.4 Lens Quad, 640×360 Capture RT의 16:9 규격이다. Right/Left는 1200×1200 Canvas, 5.4×5.4 Lens Quad, 640×640 Capture RT의 정사각형이며, 여섯 면은 겹침 없이 닫힌 직육면체를 이룬다. Bottom은 FOV 90.1에서 화면 전체에 정확히 맞고, 나머지 면은 방향별 FOV로 인접 면을 함께 보여준다.
 
 ## 2. 중요 파일
 
@@ -153,17 +154,13 @@ World Space uGUI
 
 전용 레이어는 Front 8, Right 9, Bottom 10, PixelOutput 11, Left 12, Back 13, Top 14다. ViewerCamera는 원본 UI 레이어를 제외하고 렌즈 Quad를 보며, 각 Capture Camera는 자기 면의 UI만 렌더링한다.
 
-## 8. Bottom 연결과 화면 비율
+## 8. 면 연결과 화면 비율
 
-- Front/Right/Back/Left 물리 면: 1200×900
-- Top/Bottom 물리 면: 1200×1200
-- 가로 면 캡처 RT: 640×480
-- Top/Bottom 캡처 RT: 640×640
+- Front/Back/Top/Bottom: Canvas 1200×675, Lens Quad 9.6×5.4, 캡처 RT 640×360
+- Right/Left: Canvas 1200×1200, Lens Quad 5.4×5.4, 캡처 RT 640×640
 - 최종 출력 RT: 640×360, 16:9
 
-Bottom 내부의 이전 `SafeArea16x9`는 제거했다. Bottom의 모든 UI는 `Face_Bottom` 전체 좌표계를 사용한다. 다만 FOV 78에서는 정면 화면이 차지하는 비율이 커서 Bottom의 매우 얕은 가장자리만 보인다. 향후 Bottom 상단 UI를 더 많이 노출하려면 물리 면을 단순 축소하는 대신, 육면체 접합을 유지하는 별도 표시 방식이 필요하다.
-
-물리적인 여섯 면을 모두 16:9로 바꾸면 현재 직육면체 모서리 길이가 맞지 않는다. 그래서 면의 공간 규격은 유지하고, 최종 플레이 출력만 640×360의 16:9로 통일했다.
+정확한 직육면체에서는 세 축 길이 관계 때문에 여섯 면을 모두 16:9로 닫을 수 없다. 현재 구조는 X 9.6, Y 5.4, Z 5.4이며, 깊이 방향 길이가 5.4인 Right/Left를 정사각형으로 만들어 모든 모서리가 실제 좌표에서 정확히 맞물린다. 렌즈 셰이더는 불투명 깊이 렌더링을 사용하므로 투명 합성이나 현재 면 sortingOrder 보정이 필요 없다.
 
 ## 9. Inspector 조절값
 
@@ -173,11 +170,13 @@ Bottom 내부의 이전 `SafeArea16x9`는 제거했다. Bottom의 모든 UI는 `
 | --- | ---: | --- |
 | `Turn Duration` | 0.45 | 90도 화면 전환 시간 |
 | `Drag Threshold` | 80 | 드래그 이동 최소 거리 |
-| `Top Field Of View` | 110 | Top 화면용 FOV |
-| `Bottom Field Of View` | 72.5 | Bottom 단독 화면용 FOV |
+| `Front Back Field Of View` | 95 | Front/Back과 인접 면 표시 |
+| `Side Field Of View` | 63 | Right/Left와 인접 면 표시 |
+| `Top Field Of View` | 95 | Top과 인접 면 표시 |
+| `Bottom Field Of View` | 90.1 | Bottom 16:9 면 전체 일치 |
 | `Turn Ease` | InOutSine | DOTween 회전/FOV Ease |
 
-가로 화면 기준값은 `ViewerCamera`와 `UIEventCamera`의 FOV 78이다. 플레이 시작 시 컨트롤러가 이 값을 기억하고 Top/Bottom에서 복귀할 때 복원한다.
+플레이 시작 시 Front FOV 95를 적용하며, 회전 대상 면에 맞춰 ViewerCamera와 UIEventCamera의 FOV를 함께 보간한다.
 
 ### `PixelPresentation/NavigationOverlay`
 
@@ -209,8 +208,9 @@ Bottom 내부의 이전 `SafeArea16x9`는 제거했다. Bottom의 모든 UI는 `
 - Top에서 Down만 허용하며 두 번째 Up은 회전값 변화 없음
 - Bottom에서 Up만 허용하며 두 번째 Down은 회전값 변화 없음
 - 가장자리 진입 시 Fade Tween 생성, 0.1초 시 alpha 0.75, 0.2초 시 alpha 1 확인
-- ViewerCamera와 UIEventCamera의 가로 화면 FOV 78 복구 확인
-- Top/Bottom 1200×900 임시 테스트에서 중앙 배치는 Front 틈, Front 정렬은 Bottom 정면 잘림이 발생함을 확인하고 씬에는 미적용
+- Front/Back/Top/Bottom 1200×675 / 9.6×5.4 / 640×360 확인
+- Right/Left 1200×1200 / 5.4×5.4 / 640×640 확인
+- Front/Back 95, Right/Left 63, Top 95, Bottom 90.1 전환 확인
 - Bottom 진입 시 다른 면이 보이지 않고 Bottom만 화면을 채움
 - Back, Left, Top의 서로 다른 렌즈 왜곡 확인
 - 640×360 Point 필터 최종 출력 확인

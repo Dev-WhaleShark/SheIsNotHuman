@@ -12,7 +12,7 @@
 이 저장소의 Docs/CODEX_HANDOFF.md와 Docs/CubeScreenPrototype.md를 먼저 끝까지 읽어.
 Unity 6000.5.4f1로 Assets/Scenes/CubeScreenPrototype.unity를 열고 Unity MCP 서버를 연결해.
 Assets/Scenes/TestScene.unity는 이번 작업과 무관하므로 수정하지 마.
-현재 FOV 78과 기존 공통 내비게이션/렌즈 구조를 유지하면서, 인계서의 "미완료 설계 쟁점"부터 검토하고 작업을 이어가.
+현재 Front/Back/Top/Bottom 16:9 + Right/Left 정사각형 구조와 면별 FOV, 기존 공통 내비게이션/렌즈 구조를 유지하면서 작업을 이어가.
 씬이나 코드를 수정한 뒤에는 반드시 Play Mode 화면 캡처와 Console 오류/경고를 확인해.
 ```
 
@@ -143,25 +143,25 @@ PixelPresentation
 
 | 항목 | 값 |
 | --- | ---: |
-| ViewerCamera 기본 FOV | 78 |
-| UIEventCamera 기본 FOV | 78 |
-| Top 전용 FOV | 110 |
-| Bottom 전용 FOV | 72.5 |
+| Front/Back FOV | 95 |
+| Right/Left FOV | 63 |
+| Top 전용 FOV | 95 |
+| Bottom 전용 FOV | 90.1 |
 | 회전 시간 | 0.45초 |
 | 회전 Ease | DOTween `Ease.InOutSine` |
 | 드래그 최소 거리 | 80픽셀 |
 | 최종 PixelFrame | 640×360 / Point |
 
-중요: 직전 작업에서 가로 기본 FOV를 92로 올렸지만 너무 넓다는 요청으로 다시 78로 복구했다. 씬에 저장된 최종값은 ViewerCamera/UIEventCamera 모두 78이다.
+ViewerCamera/UIEventCamera의 시작 FOV는 Front용 95다. CubeScreenController가 현재 면에 따라 Front/Back 95, Right/Left 63, Top 95, Bottom 90.1로 동시에 전환한다.
 
 ### 면 규격
 
 | 면 | Canvas | Lens Quad | Capture RT |
 | --- | --- | --- | --- |
-| Front/Right/Back/Left | 1200×900 | 9.6×7.2 | 640×480 |
-| Top/Bottom | 1200×1200 | 9.6×9.6 | 640×640 |
+| Front/Back/Top/Bottom | 1200×675 | 9.6×5.4 | 640×360 |
+| Right/Left | 1200×1200 | 5.4×5.4 | 640×640 |
 
-현재 Top/Bottom은 여전히 정사각형이다. 1200×900 직사각형 변경은 테스트만 했고 저장하지 않았다.
+전체 공간은 X 9.6, Y 5.4, Z 5.4인 직육면체다. Front/Back/Top/Bottom은 16:9이고 Right/Left는 5.4×5.4 정사각형이므로 여섯 면이 실제 좌표에서 겹침 없이 정확히 닫힌다.
 
 ### 프로젝트 레이어
 
@@ -233,12 +233,32 @@ DOTween을 제거하거나 코루틴 방식으로 되돌리지 않는다.
 - Front/Right/Back/Left/Top 서로 다른 렌즈 값
 - Bottom 중립 렌즈/일반 2D 효과
 - 640×360 Point 기반 픽셀 출력
+- Front/Back/Top/Bottom 1200×675 / 9.6×5.4 / 640×360
+- Right/Left 1200×1200 / 5.4×5.4 / 640×640 정사각형
+- Front/Back·Side·Top·Bottom 면별 FOV 분리
+- Bottom 90.1°에서 화면 전체 일치
+- 불투명 깊이 렌더링으로 여섯 면의 실제 접합 유지
 - PixelOutputCamera로 Display 1 출력 복구
 - URP HDR 비활성화, Point 업스케일, 품질 설정의 AA/Anisotropic 비활성화
 - Unity MCP Play Mode 검증
 - 마지막 확인 시 Unity Console 오류/경고 0건
 
-## 10. 미완료 설계 쟁점 — 다음 작업의 시작점
+## 10. 2026-08-24 직육면체 재설계
+
+현재 구현은 네 개의 16:9 면과 두 개의 정사각형 측면으로 겹침 없는 직육면체를 만든다.
+
+- Front/Back/Top/Bottom: Canvas 1200×675, Lens 9.6×5.4, Capture RT 640×360
+- Right/Left: Canvas 1200×1200, Lens 5.4×5.4, Capture RT 640×640
+- 내부 기준 공간: X 9.6, Y 5.4, Z 5.4
+- Front/Back은 z=±2.7, Top/Bottom은 y=±2.7, Right/Left는 x=±4.8 경계에 놓여 정확히 맞물린다.
+- Right/Left의 깊이 방향 길이를 9.6에서 5.4로 줄여 Front/Back 밖으로 튀어나오던 겹침을 제거했다.
+- 렌즈 셰이더는 다시 불투명 Geometry, ZWrite On, ZTest LEqual로 동작하며 별도 sortingOrder 우선순위가 없다.
+- Bottom 렌즈 거리는 약 2.696이고, 90.1°에서 9.6×5.4 면이 16:9 화면에 정확히 일치한다.
+- Front/Back 95, Right/Left 63, Top 95에서는 중앙 면 주위로 인접 면이 보인다.
+
+아래 내용은 이 재설계 이전의 검토 기록이다.
+
+### 이전 미완료 설계 쟁점
 
 사용자의 최신 방향:
 
@@ -310,9 +330,9 @@ Front/Back은 9.6×7.2이고 Left/Right도 9.6×7.2이므로 깊이와 폭이 �
 1. Unity에서 `CubeScreenPrototype.unity`를 연다.
 2. MCP 서버를 시작하고 현재 인스턴스를 선택한다.
 3. Edit Mode에서 다음을 확인한다.
-   - ViewerCamera FOV 78
-   - UIEventCamera FOV 78
-   - Face_Top / Face_Bottom 1200×1200
+   - ViewerCamera/UIEventCamera 시작 FOV 95
+   - Front/Back/Top/Bottom Face 1200×675, Lens 9.6×5.4, RT 640×360
+   - Right/Left Face 1200×1200, Lens 5.4×5.4, RT 640×640
    - uGUI Button 4개
    - Capture Camera 6개
    - CubeFaceLensDisplay 6개
@@ -364,7 +384,7 @@ MCP `execute_code`에서 프로젝트 타입을 직접 찾지 못할 때는 `Res
 - DOTween namespace 오류 없음
 - Unity MCP 연결 가능
 - 프로토타입 씬 Play Mode에서 Display 1 정상 출력
-- FOV 78 및 공통 버튼 네 개 확인
+- 면별 FOV 및 공통 버튼 네 개 확인
 - 여섯 렌즈 면 확인
 - `Docs/CODEX_HANDOFF.md`의 미완료 쟁점부터 다음 작업을 시작할 수 있음
 
