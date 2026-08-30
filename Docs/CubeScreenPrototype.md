@@ -7,16 +7,16 @@
 - Unity: 6000.5.4f1 / URP
 - UI: World Space uGUI + TextMeshPro
 - 최종 출력: 640×360 RenderTexture를 Point 필터로 확대하는 16:9 픽셀 화면
-- Front/Back FOV: 95
+- Front/Back FOV: 63
 - Right/Left FOV: 63
-- Top FOV: 95
+- Top FOV: 121.3
 - Bottom FOV: 90.1
 - 화면 전환: 90도, 0.45초, DOTween `Ease.InOutSine`
 - 공통 버튼 Fade: 0.2초, DOTween `Ease.OutQuad`
 - 마우스 가장자리 감지 폭: 44픽셀
 - 오른쪽 마우스 드래그 최소 거리: 80픽셀
 
-Front/Back/Top/Bottom은 1200×675 Canvas, 9.6×5.4 Lens Quad, 640×360 Capture RT의 16:9 규격이다. Right/Left는 1200×1200 Canvas, 5.4×5.4 Lens Quad, 640×640 Capture RT의 정사각형이며, 여섯 면은 겹침 없이 닫힌 직육면체를 이룬다. Bottom은 FOV 90.1에서 화면 전체에 정확히 맞고, 나머지 면은 방향별 FOV로 인접 면을 함께 보여준다.
+Front/Right/Back/Left/Bottom은 1280×720 Canvas와 16×9 Lens Quad의 명시적인 16:9 규격이다. Top은 방의 16×16 바닥·천장 단면을 덮기 위해 1280×1280 Canvas와 16×16 Lens Quad를 사용한다. Bottom은 Front 쪽 모서리를 붙인 채 z=3.5로 이동되어 있으며, 정면 진입 시 ViewerRig가 같은 방향으로 3.5 이동하고 FOV 90.1을 적용해 화면 전체에 맞춘다.
 
 ## 2. 중요 파일
 
@@ -123,7 +123,7 @@ Top에서 Up을 다시 누르거나 Bottom에서 Down을 다시 눌러도 회전
 
 직접 작성했던 코루틴, `AnimationCurve`, `Quaternion.SlerpUnclamped`, 수동 DeltaTime 보간은 제거했다.
 
-- `CubeScreenController.BeginTurn()`은 하나의 DOTween `Sequence`에서 `DORotateQuaternion`과 카메라 FOV `DOTween.To`를 동시에 실행한다.
+- `CubeScreenController.BeginTurn()`은 하나의 DOTween `Sequence`에서 `DORotateQuaternion`, `DOMove`, 카메라 FOV `DOTween.To`를 동시에 실행한다.
 - `SetUpdate(true)`를 사용하므로 `Time.timeScale`이 0이어도 화면 전환이 진행된다.
 - 회전 중에는 `_turnSequence`가 존재하므로 추가 이동 입력을 차단한다.
 - `CubeNavigationOverlay`는 각 `CanvasGroup`에 `DOFade`를 사용한다.
@@ -156,11 +156,11 @@ World Space uGUI
 
 ## 8. 면 연결과 화면 비율
 
-- Front/Back/Top/Bottom: Canvas 1200×675, Lens Quad 9.6×5.4, 캡처 RT 640×360
-- Right/Left: Canvas 1200×1200, Lens Quad 5.4×5.4, 캡처 RT 640×640
+- Front/Right/Back/Left/Bottom: Canvas 1280×720, Lens Quad 16×9, 캡처 RT 640×360
+- Top: Canvas 1280×1280, Lens Quad 16×16, 캡처 RT 640×640
 - 최종 출력 RT: 640×360, 16:9
 
-정확한 직육면체에서는 세 축 길이 관계 때문에 여섯 면을 모두 16:9로 닫을 수 없다. 현재 구조는 X 9.6, Y 5.4, Z 5.4이며, 깊이 방향 길이가 5.4인 Right/Left를 정사각형으로 만들어 모든 모서리가 실제 좌표에서 정확히 맞물린다. 렌즈 셰이더는 불투명 깊이 렌더링을 사용하므로 투명 합성이나 현재 면 sortingOrder 보정이 필요 없다.
+기준 공간은 X 16, Y 9, Z 16이다. Front/Back은 z=±8, Right/Left는 x=±8, Top은 y=4.5에 놓여 서로 맞물린다. Bottom은 y=-4.5, z=3.5에 놓아 z=8인 Front 아래 모서리에 붙인다. 따라서 Bottom 뒤쪽과 Back 사이에는 7 유닛의 열린 영역이 남고 좌우 접합도 비대칭이지만, 이는 Bottom을 주 화면으로 유지하기 위해 현재 단계에서 의도적으로 허용한 트레이드오프다. 렌즈 셰이더는 불투명 깊이 렌더링을 유지한다.
 
 ## 9. Inspector 조절값
 
@@ -170,13 +170,14 @@ World Space uGUI
 | --- | ---: | --- |
 | `Turn Duration` | 0.45 | 90도 화면 전환 시간 |
 | `Drag Threshold` | 80 | 드래그 이동 최소 거리 |
-| `Front Back Field Of View` | 95 | Front/Back과 인접 면 표시 |
+| `Bottom Forward Offset` | 3.5 | Bottom 정면 진입 시 ViewerRig 전진 거리 |
+| `Front Back Field Of View` | 63 | Front/Back과 인접 면 표시 |
 | `Side Field Of View` | 63 | Right/Left와 인접 면 표시 |
-| `Top Field Of View` | 95 | Top과 인접 면 표시 |
+| `Top Field Of View` | 121.3 | 16×16 Top 전체와 인접 면 표시 |
 | `Bottom Field Of View` | 90.1 | Bottom 16:9 면 전체 일치 |
-| `Turn Ease` | InOutSine | DOTween 회전/FOV Ease |
+| `Turn Ease` | InOutSine | DOTween 위치/회전/FOV Ease |
 
-플레이 시작 시 Front FOV 95를 적용하며, 회전 대상 면에 맞춰 ViewerCamera와 UIEventCamera의 FOV를 함께 보간한다.
+플레이 시작 시 Front FOV 63을 적용한다. Bottom 진입 시에는 ViewerRig 위치도 Front 방향으로 3.5 이동하며, Bottom에서 복귀할 때 원래 중심으로 돌아온다. ViewerCamera와 UIEventCamera의 FOV는 항상 함께 보간한다.
 
 ### `PixelPresentation/NavigationOverlay`
 
@@ -198,6 +199,9 @@ World Space uGUI
 8. Left, Back, Top에 전용 UI 레이어, Capture Camera, RenderTexture, 렌즈 Quad와 프로필 추가
 9. Bottom은 렌즈 파이프라인을 유지하되 중립값으로 일반 2D 출력
 10. Unity MCP Play Mode에서 이동 규칙, 재입력 차단, Fade Tween, 여섯 렌즈와 픽셀 출력을 검증
+11. 다섯 개의 16:9 면을 1280×720 / 16×9로 정규화하고 Top을 1280×1280 / 16×16으로 확장
+12. 기준 공간을 X 16, Y 9, Z 16으로 재배치하고 Bottom을 Front 아래 모서리에 접합
+13. Bottom 진입/복귀에 ViewerRig 위치 보간을 추가하고 면별 FOV를 63/63/121.3/90.1로 조정
 
 ## 11. 검증 결과
 
@@ -208,14 +212,17 @@ World Space uGUI
 - Top에서 Down만 허용하며 두 번째 Up은 회전값 변화 없음
 - Bottom에서 Up만 허용하며 두 번째 Down은 회전값 변화 없음
 - 가장자리 진입 시 Fade Tween 생성, 0.1초 시 alpha 0.75, 0.2초 시 alpha 1 확인
-- Front/Back/Top/Bottom 1200×675 / 9.6×5.4 / 640×360 확인
-- Right/Left 1200×1200 / 5.4×5.4 / 640×640 확인
-- Front/Back 95, Right/Left 63, Top 95, Bottom 90.1 전환 확인
+- Front/Right/Back/Left/Bottom 1280×720 / 16×9 / 640×360 확인
+- Top 1280×1280 / 16×16 / 640×640 확인
+- Front/Back 63, Right/Left 63, Top 121.3, Bottom 90.1 전환 확인
+- Bottom 진입 시 ViewerRig z=3.5, 복귀 시 z=0으로 위치 보간 확인
 - Bottom 진입 시 다른 면이 보이지 않고 Bottom만 화면을 채움
+- Front에서 Bottom의 Front 접합부가 회색 바닥 영역으로 보임
+- Back 하단 및 Side 한쪽 하단의 열린 영역은 현재 허용한 Bottom 비대칭으로 확인
 - Back, Left, Top의 서로 다른 렌즈 왜곡 확인
 - 640×360 Point 필터 최종 출력 확인
 - Display 1 출력 카메라 정상 동작
-- Play Mode Console 오류·경고 0건
+- Play Mode 기능 확인 후 Console 오류·경고 0건
 
 현재 검증은 Unity MCP를 통한 실제 Play Mode 검사다. 별도 Unity Test Framework 자동화 테스트는 아직 추가하지 않았다.
 
