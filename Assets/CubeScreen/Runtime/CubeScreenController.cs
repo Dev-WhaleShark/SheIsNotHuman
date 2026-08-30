@@ -1,4 +1,5 @@
 using DG.Tweening;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -8,10 +9,21 @@ using UnityEngine.InputSystem;
 
 namespace SheIsNotHuman.CubeScreen
 {
+    public enum CubeFace
+    {
+        Front,
+        Right,
+        Back,
+        Left,
+        Top,
+        Bottom
+    }
+
     /// <summary>
-    /// Rotates the viewer between the six faces of the screen room.
-    /// The same public methods can be connected to uGUI buttons.
+    /// 뷰어를 육면체의 각 화면으로 회전·이동한다.
+    /// 공개 전환 메서드는 공통 UI 버튼에서도 호출한다.
     /// </summary>
+    [HideMonoScript]
     public sealed class CubeScreenController : MonoBehaviour
     {
         private enum HorizontalView
@@ -29,15 +41,37 @@ namespace SheIsNotHuman.CubeScreen
             Bottom
         }
 
+        [TitleGroup("화면 전환")]
+        [LabelText("회전 시간"), SuffixLabel("초")]
         [SerializeField, Min(0.05f)] private float turnDuration = 0.45f;
 
+        [TitleGroup("화면 전환")]
+        [LabelText("Bottom 전진 거리"), SuffixLabel("unit")]
         [SerializeField, Min(0f)] private float bottomForwardOffset = 3.5f;
+
+        [TitleGroup("화면 전환")]
+        [LabelText("드래그 인식 거리"), SuffixLabel("px")]
         [SerializeField, Min(1f)] private float dragThreshold = 80f;
+
+        [TitleGroup("면별 카메라 화각")]
+        [LabelText("Front / Back"), SuffixLabel("°")]
         [SerializeField, Range(45f, 100f)] private float frontBackFieldOfView = 63f;
+
+        [TitleGroup("면별 카메라 화각")]
+        [LabelText("Left / Right"), SuffixLabel("°")]
         [SerializeField, Range(45f, 100f)] private float sideFieldOfView = 63f;
+
         [FormerlySerializedAs("verticalFieldOfView")]
+        [TitleGroup("면별 카메라 화각")]
+        [LabelText("Top"), SuffixLabel("°")]
         [SerializeField, Range(90f, 130f)] private float topFieldOfView = 121.3f;
+
+        [TitleGroup("면별 카메라 화각")]
+        [LabelText("Bottom"), SuffixLabel("°")]
         [SerializeField, Range(45f, 100f)] private float bottomFieldOfView = 90.1f;
+
+        [TitleGroup("화면 전환")]
+        [LabelText("회전 Ease")]
         [SerializeField] private Ease turnEase = Ease.InOutSine;
 
         private Sequence _turnSequence;
@@ -57,7 +91,39 @@ namespace SheIsNotHuman.CubeScreen
         private bool _isDragging;
 #endif
 
+        [ShowInInspector, ReadOnly, HideInEditorMode]
+        [FoldoutGroup("런타임 상태"), LabelText("회전 중")]
         public bool IsTurning => _turnSequence != null;
+
+        [ShowInInspector, ReadOnly, HideInEditorMode]
+        [FoldoutGroup("런타임 상태"), LabelText("현재 면")]
+        public CubeFace CurrentFace => _verticalView switch
+        {
+            VerticalView.Top => CubeFace.Top,
+            VerticalView.Bottom => CubeFace.Bottom,
+            _ => _horizontalView switch
+            {
+                HorizontalView.Front => CubeFace.Front,
+                HorizontalView.Right => CubeFace.Right,
+                HorizontalView.Back => CubeFace.Back,
+                HorizontalView.Left => CubeFace.Left,
+                _ => CubeFace.Front
+            }
+        };
+
+        [ShowInInspector, ReadOnly, HideInEditorMode]
+        [FoldoutGroup("런타임 상태"), LabelText("수평 화면")]
+        private HorizontalView CurrentHorizontalView => _horizontalView;
+
+        [ShowInInspector, ReadOnly, HideInEditorMode]
+        [FoldoutGroup("런타임 상태"), LabelText("수직 화면")]
+        private VerticalView CurrentVerticalView => _verticalView;
+
+        [ShowInInspector, ReadOnly, HideInEditorMode]
+        [FoldoutGroup("런타임 상태"), LabelText("목표 FOV"), SuffixLabel("°")]
+        private float CurrentTargetFieldOfView => _targetFieldOfView;
+
+        // 현재 화면에서 가능한 방향만 공통 UI에 노출한다.
         public bool CanTurnLeft => !IsTurning && _verticalView == VerticalView.Horizontal;
         public bool CanTurnRight => !IsTurning && _verticalView == VerticalView.Horizontal;
         public bool CanTurnUp => !IsTurning
@@ -67,8 +133,15 @@ namespace SheIsNotHuman.CubeScreen
             && ((_verticalView == VerticalView.Horizontal && _horizontalView == HorizontalView.Front)
                 || _verticalView == VerticalView.Top);
 
+        /// <summary>전환이 끝난 현재 면에만 UI 입력을 허용한다.</summary>
+        public bool CanReceiveInput(CubeFace face)
+        {
+            return isActiveAndEnabled && !IsTurning && CurrentFace == face;
+        }
+
         private void Awake()
         {
+            // 씬 시작 자세를 정면 기준 상태로 저장한다.
             _targetRotation = transform.rotation;
             _targetPosition = transform.position;
             _horizontalRotation = _targetRotation;
@@ -88,6 +161,7 @@ namespace SheIsNotHuman.CubeScreen
                 return;
             }
 
+            // 비활성화 중인 트윈을 정리하고 목표 자세로 고정한다.
             _turnSequence.Kill();
             _turnSequence = null;
             transform.SetPositionAndRotation(_targetPosition, _targetRotation);
@@ -102,16 +176,25 @@ namespace SheIsNotHuman.CubeScreen
 #endif
         }
 
+        /// <summary>현재 수평 화면에서 왼쪽 면으로 이동한다.</summary>
+        [Button("← 왼쪽", ButtonSizes.Medium)]
+        [ButtonGroup("플레이 테스트/수평"), DisableInEditorMode]
         public void TurnLeft()
         {
             TurnHorizontal(-90f);
         }
 
+        /// <summary>현재 수평 화면에서 오른쪽 면으로 이동한다.</summary>
+        [Button("오른쪽 →", ButtonSizes.Medium)]
+        [ButtonGroup("플레이 테스트/수평"), DisableInEditorMode]
         public void TurnRight()
         {
             TurnHorizontal(90f);
         }
 
+        /// <summary>정면에서 위를 보거나 Bottom에서 정면으로 돌아간다.</summary>
+        [Button("↑ 위", ButtonSizes.Medium)]
+        [ButtonGroup("플레이 테스트/수직"), DisableInEditorMode]
         public void TurnUp()
         {
             if (IsTurning)
@@ -121,6 +204,7 @@ namespace SheIsNotHuman.CubeScreen
 
             if (_verticalView == VerticalView.Horizontal && _horizontalView == HorizontalView.Front)
             {
+                // Top에서 돌아올 수 있도록 정면 자세를 보관한다.
                 _horizontalRotation = _targetRotation;
                 _horizontalPosition = transform.position;
                 _verticalView = VerticalView.Top;
@@ -133,6 +217,9 @@ namespace SheIsNotHuman.CubeScreen
             }
         }
 
+        /// <summary>정면에서 아래를 보거나 Top에서 정면으로 돌아간다.</summary>
+        [Button("↓ 아래", ButtonSizes.Medium)]
+        [ButtonGroup("플레이 테스트/수직"), DisableInEditorMode]
         public void TurnDown()
         {
             if (IsTurning)
@@ -142,6 +229,7 @@ namespace SheIsNotHuman.CubeScreen
 
             if (_verticalView == VerticalView.Horizontal && _horizontalView == HorizontalView.Front)
             {
+                // Bottom을 가득 채우기 위해 회전과 함께 앞으로 이동한다.
                 _horizontalRotation = _targetRotation;
                 _horizontalPosition = transform.position;
                 _verticalView = VerticalView.Bottom;
@@ -158,6 +246,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void TurnHorizontal(float angle)
         {
+            // Top과 Bottom에서는 좌우 회전을 허용하지 않는다.
             if (IsTurning || _verticalView != VerticalView.Horizontal)
             {
                 return;
@@ -174,6 +263,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private Quaternion CreateVerticalDestination(float angle)
         {
+            // 정면의 로컬 오른쪽 축을 기준으로 위아래를 회전한다.
             Vector3 worldAxis = _horizontalRotation * Vector3.right;
             return Quaternion.AngleAxis(angle, worldAxis) * _horizontalRotation;
         }
@@ -183,6 +273,7 @@ namespace SheIsNotHuman.CubeScreen
             Vector3 destinationPosition,
             float destinationFieldOfView)
         {
+            // 회전, 위치, 화각을 하나의 DOTween 시퀀스로 맞춘다.
             _targetRotation = destination;
             _targetPosition = destinationPosition;
             _targetFieldOfView = destinationFieldOfView;
@@ -215,6 +306,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void ApplyFieldOfView(float fieldOfView)
         {
+            // 렌더 카메라와 UI 입력 카메라의 투영을 동일하게 유지한다.
             if (_viewerCamera != null)
             {
                 _viewerCamera.fieldOfView = fieldOfView;
@@ -287,6 +379,7 @@ namespace SheIsNotHuman.CubeScreen
 
             if (Mathf.Abs(delta.x) >= Mathf.Abs(delta.y))
             {
+                // 화면을 끌어당기는 방향과 시점 회전 방향은 반대다.
                 if (delta.x < 0f)
                 {
                     TurnRight();
