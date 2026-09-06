@@ -373,3 +373,37 @@ SpriteRenderer 객체가 클릭 가능해야 한다면 두 가지 방법이 있�
 - 씬 검증, VolumeProfile 재로드, Console 오류와 경고 검사를 통과했다.
 
 이 방식은 구조가 가장 단순하고 실제 원근을 바로 얻을 수 있다. 반면 World Space UI도 카메라 투영과 후처리 영향을 함께 받으므로, 가장자리 UI 배치와 입력 좌표는 렌즈 안전 영역을 기준으로 설계해야 한다.
+
+## 18. 단일 카메라 6면체 테스트 재개 — 2026-09-06
+
+- 씬: `Assets/Scenes/PerspectiveCubeViewPrototype.unity`
+- 루트: `ViewRig`(카메라·전환 컨트롤러), `CubeFaces`(6면), `LensVolume`.
+- 면마다 Surface, SampleObject, Canvas만 둔다. 단색 면과 Sprite, 텍스트로 구분한다.
+- 카메라 1대가 모든 면을 직접 렌더링한다. 면별 RenderTexture는 없다.
+- 수평 FOV 80으로 기존 렌즈 확대 상태에서도 이웃 면이 보이도록 조정했다. 수직 FOV는 90이다.
+- 6면 Canvas는 모두 1200×675(16:9)다. 재개 당시 Top/Bottom Surface는 12×12였고, Bottom은 아래 추가 작업에서 16:9로 변경했다.
+- Canvas 정렬 순서를 20으로 올려 Sprite(10)에 가려지던 객체 라벨을 수정했다.
+- `PerspectiveCubeViewController`에서 DOTween으로 회전·FOV·Volume Weight를 함께 전환한다.
+- A/D·좌우 화살표: Front → Right → Back → Left 순환. 우클릭 드래그도 지원한다.
+- Front에서 W/위로 Top, S/아래로 Bottom에 진입한다. Top에서는 아래만, Bottom에서는 위만 Front로 복귀한다.
+- Top/Bottom의 좌우 및 추가 수직 진입, 전환 중 중복 입력을 차단한다.
+- Bottom에 도착하면 Volume Weight=0, 무왜곡 Sprite 머티리얼을 사용한다. 복귀 시 Weight=1로 복원한다.
+- 비활성화 시 트윈을 정리하고 회전·FOV·Volume Weight를 목표 상태로 맞춘다.
+- Play Mode에서 여섯 면의 상태 전환, 한 바퀴 순환, 역방향 순환, 금지 입력, 비활성화 중단을 검증했다.
+- Front/Right/Top/Bottom 출력을 캡처해 확인했다. 캡처는 Git에서 제외된 `Assets/Screenshots/PerspectiveCubeView`에 있다.
+
+테스트 범위와 한계:
+
+- 현재 조작은 키보드·우클릭 드래그다. 공통 마우스 가장자리 버튼과 면별 클릭 기능은 포함하지 않는다.
+- 카메라 렌즈는 화면 전체에 공통 적용된다. 객체별 차이는 Sprite 머티리얼의 로컬 왜곡·블러이며, 거리 자동 연동은 없다.
+- Bottom이 이웃 면으로 살짝 보일 때도 공통 카메라 렌즈는 적용된다. Bottom만 바라보는 상태에서 후처리가 꺼진다.
+- 원근 및 후처리 재샘플링이 있으므로 정수배 픽셀 퍼펙트 출력을 보장하는 씬은 아니다.
+
+### Bottom을 Front 하단에 접합 — 2026-09-06
+
+- 기존 `CubeScreenPrototype`과 같은 배치 방식으로 Bottom Surface를 12×6.75(16:9)로 줄였다. Top은 변경하지 않았다.
+- `Face_Bottom`을 (0, -3.375, 2.625)에 배치해 위쪽 모서리가 Front 하단(z=6)에 맞닿는다. Canvas와 Sprite도 함께 이동한다.
+- Bottom 진입 시 ViewRig가 Front 방향으로 2.625 이동하고, 복귀 시 원위치로 돌아온다. 기존 DOTween 시퀀스에 위치 보간을 추가했다.
+- FOV와 렌즈 설정은 유지한다. 16:9 출력에서 Bottom 단독 전체 화면과 Front에서 Bottom 헤더 일부 노출을 캡처로 확인했다.
+- Front 복귀, Bottom 금지 입력, 전환 중 비활성화 시 목표 위치 정리를 Play Mode에서 검증했다.
+- Bottom 뒤쪽(z=-0.75)과 Back(z=-6) 사이에는 바닥이 없다. 기존 씬과 같은 비대칭 구조이며, 다른 면 하단에서 열린 영역이 보일 수 있다.

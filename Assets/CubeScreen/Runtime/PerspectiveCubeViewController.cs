@@ -1,5 +1,6 @@
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -19,11 +20,19 @@ namespace SheIsNotHuman.CubeScreen
 
         [Header("카메라")]
         [SerializeField] private Camera viewCamera;
-        [SerializeField, Range(45f, 100f)] private float horizontalFieldOfView = 65f;
+        [SerializeField, Range(45f, 100f)] private float horizontalFieldOfView = 80f;
         [SerializeField, Range(45f, 120f)] private float verticalFieldOfView = 90f;
+        [SerializeField] private Volume lensVolume;
+        [SerializeField, Min(0f)] private float bottomForwardOffset = 2.625f;
 
         private Sequence _turnSequence;
         private Quaternion _targetRotation;
+        private Quaternion _frontRotation;
+        private Vector3 _frontPosition;
+        private Vector3 _targetPosition;
+        private float _targetFieldOfView;
+        private float _targetLensWeight;
+        private float _normalLensWeight;
         private int _horizontalIndex;
 
 #if ENABLE_INPUT_SYSTEM
@@ -36,13 +45,29 @@ namespace SheIsNotHuman.CubeScreen
 
         private void Awake()
         {
-            viewCamera ??= GetComponentInChildren<Camera>();
-            _targetRotation = transform.localRotation;
+            if (viewCamera == null)
+                viewCamera = GetComponentInChildren<Camera>();
+            if (viewCamera == null)
+            {
+                Debug.LogError("뷰 전환에 사용할 카메라가 없습니다.", this);
+                enabled = false;
+                return;
+            }
+            _frontRotation = transform.localRotation;
+            _frontPosition = transform.localPosition;
+            _targetPosition = _frontPosition;
+            _targetRotation = _frontRotation;
+            _targetFieldOfView = horizontalFieldOfView;
+            _normalLensWeight = lensVolume != null ? lensVolume.weight : 1f;
+            _targetLensWeight = _normalLensWeight;
             ApplyFieldOfView(horizontalFieldOfView);
         }
 
         private void OnDisable()
         {
+#if ENABLE_INPUT_SYSTEM
+            _isDragging = false;
+#endif
             if (_turnSequence == null)
             {
                 return;
@@ -51,6 +76,9 @@ namespace SheIsNotHuman.CubeScreen
             _turnSequence.Kill();
             _turnSequence = null;
             transform.localRotation = _targetRotation;
+            transform.localPosition = _targetPosition;
+            ApplyFieldOfView(_targetFieldOfView);
+            if (lensVolume != null) lensVolume.weight = _targetLensWeight;
         }
 
         private void Update()
@@ -63,31 +91,31 @@ namespace SheIsNotHuman.CubeScreen
 
         public void TurnLeft()
         {
-            if (IsTurning || !IsHorizontalFace(CurrentFace))
+            if (!isActiveAndEnabled || IsTurning || !IsHorizontalFace(CurrentFace))
             {
                 return;
             }
 
             _horizontalIndex = (_horizontalIndex + 3) % 4;
             CurrentFace = GetHorizontalFace(_horizontalIndex);
-            BeginTurn(Quaternion.Euler(0f, _horizontalIndex * 90f, 0f), horizontalFieldOfView);
+            BeginTurn(_frontRotation * Quaternion.Euler(0f, _horizontalIndex * 90f, 0f), horizontalFieldOfView);
         }
 
         public void TurnRight()
         {
-            if (IsTurning || !IsHorizontalFace(CurrentFace))
+            if (!isActiveAndEnabled || IsTurning || !IsHorizontalFace(CurrentFace))
             {
                 return;
             }
 
             _horizontalIndex = (_horizontalIndex + 1) % 4;
             CurrentFace = GetHorizontalFace(_horizontalIndex);
-            BeginTurn(Quaternion.Euler(0f, _horizontalIndex * 90f, 0f), horizontalFieldOfView);
+            BeginTurn(_frontRotation * Quaternion.Euler(0f, _horizontalIndex * 90f, 0f), horizontalFieldOfView);
         }
 
         public void TurnUp()
         {
-            if (IsTurning)
+            if (!isActiveAndEnabled || IsTurning)
             {
                 return;
             }
@@ -95,7 +123,7 @@ namespace SheIsNotHuman.CubeScreen
             if (CurrentFace == CubeFace.Front)
             {
                 CurrentFace = CubeFace.Top;
-                BeginTurn(Quaternion.Euler(-90f, 0f, 0f), verticalFieldOfView);
+                BeginTurn(_frontRotation * Quaternion.Euler(-90f, 0f, 0f), verticalFieldOfView);
             }
             else if (CurrentFace == CubeFace.Bottom)
             {
@@ -105,7 +133,7 @@ namespace SheIsNotHuman.CubeScreen
 
         public void TurnDown()
         {
-            if (IsTurning)
+            if (!isActiveAndEnabled || IsTurning)
             {
                 return;
             }
@@ -113,7 +141,7 @@ namespace SheIsNotHuman.CubeScreen
             if (CurrentFace == CubeFace.Front)
             {
                 CurrentFace = CubeFace.Bottom;
-                BeginTurn(Quaternion.Euler(90f, 0f, 0f), verticalFieldOfView);
+                BeginTurn(_frontRotation * Quaternion.Euler(90f, 0f, 0f), verticalFieldOfView);
             }
             else if (CurrentFace == CubeFace.Top)
             {
@@ -125,20 +153,33 @@ namespace SheIsNotHuman.CubeScreen
         {
             _horizontalIndex = 0;
             CurrentFace = CubeFace.Front;
-            BeginTurn(Quaternion.identity, horizontalFieldOfView);
+            BeginTurn(_frontRotation, horizontalFieldOfView);
         }
 
         private void BeginTurn(Quaternion destination, float destinationFieldOfView)
         {
             _targetRotation = destination;
+            // Front에 붙인 Bottom의 중심으로 이동하고, 복귀 시 원위치로 돌아간다.
+            _targetPosition = _frontPosition + (CurrentFace == CubeFace.Bottom
+                ? _frontRotation * Vector3.forward * bottomForwardOffset
+                : Vector3.zero);
+            _targetFieldOfView = destinationFieldOfView;
+            // Bottom은 같은 카메라에서 후처리만 꺼 평면 UI로 보여 준다.
+            _targetLensWeight = CurrentFace == CubeFace.Bottom ? 0f : _normalLensWeight;
             _turnSequence?.Kill();
             _turnSequence = DOTween.Sequence()
                 .SetUpdate(true)
                 .Join(transform.DOLocalRotateQuaternion(destination, turnDuration).SetEase(turnEase))
-                .Join(viewCamera.DOFieldOfView(destinationFieldOfView, turnDuration).SetEase(turnEase))
+                .Join(transform.DOLocalMove(_targetPosition, turnDuration).SetEase(turnEase))
+                .Join(viewCamera.DOFieldOfView(destinationFieldOfView, turnDuration).SetEase(turnEase));
+            if (lensVolume != null)
+                _turnSequence.Join(DOTween.To(() => lensVolume.weight, value => lensVolume.weight = value,
+                    _targetLensWeight, turnDuration).SetEase(turnEase));
+            _turnSequence
                 .OnComplete(() =>
                 {
                     transform.localRotation = destination;
+                    transform.localPosition = _targetPosition;
                     ApplyFieldOfView(destinationFieldOfView);
                     _turnSequence = null;
                 });
@@ -247,6 +288,7 @@ namespace SheIsNotHuman.CubeScreen
         {
             turnDuration = Mathf.Max(0.05f, turnDuration);
             dragThreshold = Mathf.Max(1f, dragThreshold);
+            bottomForwardOffset = Mathf.Max(0f, bottomForwardOffset);
         }
     }
 }
