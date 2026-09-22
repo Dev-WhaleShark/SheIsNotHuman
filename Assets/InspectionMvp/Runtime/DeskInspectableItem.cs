@@ -8,9 +8,10 @@ using UnityEngine.InputSystem;
 
 namespace SheIsNotHuman.InspectionMvp
 {
+    /// <summary>문서는 검사 흐름을, 소품은 판정 없는 확대 흐름을 사용한다.</summary>
     public enum DeskItemKind { Document, Dummy }
 
-    /// <summary>One pointer owner for all desk items. Physical screen coordinates stay unmodified.</summary>
+    /// <summary>책상 물품의 클릭과 드래그를 구분하며 모든 물품이 하나의 포인터 소유권을 공유한다.</summary>
     [DisallowMultipleComponent, RequireComponent(typeof(RectTransform))]
     public sealed class DeskInspectableItem : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
         IPointerClickHandler, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
@@ -23,6 +24,7 @@ namespace SheIsNotHuman.InspectionMvp
         [MinValue(0)] public float holdSeconds = .18f;
         [MinValue(0)] public float movePixels = 8f;
         [ShowInInspector, ReadOnly] public bool IsDragging { get; private set; }
+        // 개별 물품을 누르는 동안 다른 물품과 화면 회전이 같은 입력을 가져가지 못하게 한다.
         public static DeskInspectableItem ActiveItem { get; private set; }
         public static bool AnyPointerInteraction => ActiveItem != null;
 
@@ -34,6 +36,7 @@ namespace SheIsNotHuman.InspectionMvp
         private bool hasOrigin, moved, pendingClick;
         private readonly Vector3[] corners = new Vector3[4];
 
+        // 도메인 재로드를 생략하는 Play Mode에서도 이전 실행의 정적 소유권을 버린다.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetOwner() => ActiveItem = null;
         private void Awake() => CaptureOrigin();
@@ -43,6 +46,7 @@ namespace SheIsNotHuman.InspectionMvp
             if (!hasOrigin) { origin = rect.anchoredPosition; hasOrigin = true; }
         }
 
+        /// <summary>허용된 왼쪽 버튼 입력만 점유하고, 집은 위치의 오프셋을 보존해 드래그 시작 시 튀지 않게 한다.</summary>
         public void OnPointerDown(PointerEventData data)
         {
             pendingClick = false;
@@ -64,7 +68,7 @@ namespace SheIsNotHuman.InspectionMvp
         {
             if (ActiveItem != this) return;
             if (host == null || !host.CanInteractWith(this)) { CancelInteraction(); return; }
-            // Continue tracking outside the graphic; EventSystem still owns release/click routing.
+            // 물품 밖에서도 위치를 추적하되 놓기·클릭 전달은 EventSystem과 연계한다.
 #if ENABLE_INPUT_SYSTEM
             if (Mouse.current != null)
             {
@@ -78,6 +82,8 @@ namespace SheIsNotHuman.InspectionMvp
             Track(pointerScreen);
         }
 
+        // 화면 픽셀 이동량과 누른 시간을 모두 만족해야 드래그한다. 물리 화면 좌표는 이곳에서 보정하지 않고
+        // 책상 로컬 좌표로 바꿀 때만 렌즈 왜곡 역변환을 적용하여 이중 보정을 피한다.
         private void Track(Vector2 screen)
         {
             pointerScreen = screen;
@@ -90,6 +96,7 @@ namespace SheIsNotHuman.InspectionMvp
             ClampToDesk();
         }
 
+        // 중심점이 아닌 물품 전체 경계를 제한하고, 책상보다 큰 물품은 해당 축의 중앙에 맞춘다.
         private void ClampToDesk()
         {
             rect.GetWorldCorners(corners);
@@ -109,6 +116,7 @@ namespace SheIsNotHuman.InspectionMvp
             rect.position += deskBounds.TransformVector(correction);
         }
 
+        // 이동한 입력은 클릭 후보에서 제외한다. 짧게 움직여 드래그가 성립하지 않았어도 확대하지 않는다.
         private void Release(Vector2 screen)
         {
             if (ActiveItem != this) return;
@@ -119,22 +127,25 @@ namespace SheIsNotHuman.InspectionMvp
             if (host != null) host.RefreshDeskInput();
         }
 
+        /// <summary>누르기를 시작한 포인터의 해제만 처리한다.</summary>
         public void OnPointerUp(PointerEventData data)
         {
             if (data.pointerId == pointerId) Release(data.position);
         }
+        /// <summary>해제 단계에서 확인한 클릭 후보만 확대 요청으로 전달한다.</summary>
         public void OnPointerClick(PointerEventData data)
         {
             if (data.button != PointerEventData.InputButton.Left || !pendingClick) return;
             pendingClick = false;
             if (host != null && host.CanInteractWith(this)) host.ExpandItem(this);
         }
-        // Leave EventSystem's jitter threshold intact. Track independently enforces this item's hold + distance gate.
+        // EventSystem의 흔들림 임계값은 유지하고 Track에서 이 물품의 시간·거리 조건을 별도로 적용한다.
         public void OnInitializePotentialDrag(PointerEventData data) => data.useDragThreshold = true;
         public void OnBeginDrag(PointerEventData data) { if (ActiveItem == this) Track(data.position); }
         public void OnDrag(PointerEventData data) { if (ActiveItem == this) Track(data.position); }
         public void OnEndDrag(PointerEventData data) { if (ActiveItem == this) Release(data.position); }
 
+        /// <summary>상태 변경·비활성화·포커스 상실 시 클릭 후보와 점유를 해제해 뒤늦은 확대를 방지한다.</summary>
         public void CancelInteraction()
         {
             pendingClick = false;
@@ -143,6 +154,7 @@ namespace SheIsNotHuman.InspectionMvp
             ActiveItem = null;
             if (host != null) host.RefreshDeskInput();
         }
+        /// <summary>첫 사용 시 기록한 기본 위치로 되돌린다. 확대 닫기는 별도의 클릭 시점 스냅샷을 사용한다.</summary>
         [Button] public void RestorePosition() { CancelInteraction(); CaptureOrigin(); rect.anchoredPosition = origin; }
         private void OnDisable() => CancelInteraction();
         private void OnDestroy() => CancelInteraction();

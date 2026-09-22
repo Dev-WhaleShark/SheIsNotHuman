@@ -19,6 +19,7 @@ using UnityEngine.InputSystem.UI;
 
 namespace SheIsNotHuman.InspectionMvp.Editor
 {
+    /// <summary>기존 원근 큐브 씬에 검수 MVP를 처음 연결하는 Odin 도구다. 런타임 초기화와는 별개다.</summary>
     public sealed class InspectionMvpBuilder : OdinEditorWindow
     {
         private const string Root = "Assets/InspectionMvp";
@@ -30,6 +31,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
         [MenuItem("Tools/Inspection MVP/Builder")]
         private static void OpenWindow() => GetWindow<InspectionMvpBuilder>("Inspection MVP");
 
+        /// <summary>지정 씬에 UI·샘플 데이터·서체를 만들고 저장한다. 이미 연결된 뷰가 있으면 기존 편집을 보존한다.</summary>
         [Button("Build wired scene (one NPC, no motion)", ButtonSizes.Large)]
         public static void Build()
         {
@@ -59,7 +61,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             EnsureEventSystem();
             var camera = nav.GetComponentInChildren<Camera>();
             ConfigureCanvas(front, camera); ConfigureCanvas(bottom, camera);
-            // Preserve the prototype objects for easy inspection/reversal, hide only obsolete demos on the two owned faces.
+            // 검토·복원이 가능하도록 이전 데모를 삭제하지 않고 담당하는 두 면의 데모만 숨긴다.
             HidePrototype(front); HidePrototype(bottom);
             var root = new GameObject("InspectionMvp");
             Undo.RegisterCreatedObjectUndo(root, "Build Inspection MVP");
@@ -99,10 +101,10 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             view.hint = Label("Hint", desk, "대화를 눌러 계속", new Vector2(0, -242), new Vector2(1100, 72), font, 24, Ink);
             view.restartButton = Button("RestartButton", desk, "다시 시작", new Vector2(0, -125), new Vector2(340, 70), font, Teal);
 
-            // Bottom is a full-viewport worldspace canvas when focused. This shield stays active through both modal tweens.
+            // 책상 면의 차단막은 모달 열기와 닫기 연출이 모두 끝날 때까지 배경 클릭을 막는다.
             var shield = Panel("ModalShield", desk, Vector2.zero, new Vector2(1200, 675), new Color(0,0,0,.78f));
             shield.raycastTarget = true;
-            // Stretch beyond the face to absorb clicks in wider/taller aspect ratios as well.
+            // 화면 비율이 면보다 넓거나 높아도 차단막 밖으로 클릭이 새지 않도록 충분히 확장한다.
             shield.rectTransform.sizeDelta = new Vector2(10000,10000);
             view.modalShield = shield.gameObject;
             view.modalGroup = shield.gameObject.AddComponent<CanvasGroup>();
@@ -151,6 +153,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             var sample = canvas.transform.parent.Find("SampleObject");
             if (sample != null) sample.gameObject.SetActive(false);
         }
+        // 입력 모듈 중복은 클릭 중복으로 이어지므로 EventSystem이 여러 개면 임의로 선택하지 않는다.
         private static void EnsureEventSystem()
         {
             var systems = UnityEngine.Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include);
@@ -168,7 +171,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             }
         }
 
-        /// <summary>Targeted migration for an already-built scene; does not rebuild hierarchy or touch NPC assets.</summary>
+        /// <summary>이미 구성된 씬의 결과 도장만 책상으로 옮기고 저장한다. 전체 UI나 NPC 에셋은 재생성하지 않는다.</summary>
         public static void MigrateResultStampToDesk()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -193,6 +196,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             EditorSceneManager.SaveScene(scene);
             Debug.Log("Inspection MVP result stamp moved to desk; scene saved and NPC data preserved.");
         }
+        // 이미 존재하는 샘플은 그대로 사용해 저작한 대사·서류를 빌더 재실행으로 덮어쓰지 않는다.
         private static InspectionNpcData[] CreateRoster()
         {
             string[] names = { "김서윤", "이도현", "박하린" };
@@ -228,6 +232,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             return roster;
         }
 
+        /// <summary>현재 텍스트로 새 정적 아틀라스를 만들고 표시 참조를 바꾼다. 이전 폰트는 보존하고 씬 저장은 호출자에게 맡긴다.</summary>
         [MenuItem("Tools/Inspection MVP/Rebuild Korean Atlas")]
         [Button("Rebuild atlas from current NPC text", ButtonSizes.Medium)]
         public static void RebuildKoreanAtlas()
@@ -256,9 +261,10 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             if (regenerate) path = AssetDatabase.GenerateUniqueAssetPath(path);
             string osFont = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "malgun.ttf");
             if (!File.Exists(osFont)) throw new FileNotFoundException("Installed Malgun Gothic required to bake the sample atlas.", osFont);
-            // Read OS font directly into the rasterizer. Only baked SDF glyphs are saved; never copy the font file.
+            // OS 폰트를 직접 읽어 SDF 글리프만 저장한다. 원본 폰트 파일을 프로젝트로 복사하지 않는다.
             var font = TMP_FontAsset.CreateFontAsset(osFont, 0, 56, 7, GlyphRenderMode.SDFAA, 2048, 2048);
             if (font == null) throw new InvalidOperationException("Could not load installed Korean font.");
+            // 소스 전체(주석 포함)와 NPC 데이터를 읽으므로 텍스트 변경 후 재생성하면 수록 문자도 달라질 수 있다.
             string corpus = string.Concat(Directory.GetFiles(Root, "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
             corpus += string.Concat(Directory.GetFiles(Root + "/Samples", "*.asset").Select(File.ReadAllText));
             foreach (string guid in AssetDatabase.FindAssets("t:InspectionNpcData", new[] { Root }))
@@ -284,6 +290,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             EditorUtility.SetDirty(font);
             return font;
         }
+        // 같은 경로의 기존 에셋을 재사용하여 씬에서 연결한 참조와 GUID를 유지한다.
         private static T GetOrCreate<T>(string path) where T : ScriptableObject
         {
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);

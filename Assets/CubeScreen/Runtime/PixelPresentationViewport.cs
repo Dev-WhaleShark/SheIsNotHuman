@@ -37,6 +37,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void OnDisable()
         {
+            // 재활성화 시 새 스트림을 만들므로 기존 해상도 감시가 중복 호출되지 않도록 해제한다.
             _resolutionSubscription?.Dispose();
             _resolutionSubscription = null;
 
@@ -53,6 +54,7 @@ namespace SheIsNotHuman.CubeScreen
             referenceResolution.y = Mathf.Max(1, referenceResolution.y);
         }
 
+        /// <summary>화면 크기 변경 이벤트를 기다리지 않고 현재 해상도로 카메라 영역을 다시 맞춘다.</summary>
         [ContextMenu("Refresh Pixel Viewport")]
         [Button("뷰포트 즉시 갱신", ButtonSizes.Medium)]
         public void RefreshViewport()

@@ -10,13 +10,14 @@ using UnityEngine;
 
 namespace SheIsNotHuman.InspectionMvp.Editor
 {
-    /// <summary>Targeted migration: keeps the saved flow, roster, timing and all unrelated scene objects.</summary>
+    /// <summary>기존 책상을 부분 이관하는 Odin 도구다. 저장된 진행 설정·방문자·타이밍과 무관한 씬 오브젝트는 보존한다.</summary>
     public sealed class InspectionDeskMigration : OdinEditorWindow
     {
         private const string Prefabs = "Assets/InspectionMvp/Prefabs";
         private const string ScenePath = "Assets/Scenes/PerspectiveCubeViewPrototype.unity";
         private static readonly Color Ink = new Color(.12f, .16f, .19f);
 
+        /// <summary>문서 프리팹 연결·물품 입력·원본 확대 계층을 구성한다. 에셋은 저장하지만 씬 저장은 검토 후 별도로 한다.</summary>
         [MenuItem("Tools/Inspection MVP/Migrate desk interactions")]
         [Button("Migrate current desk")]
         public static void Apply()
@@ -33,14 +34,14 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             Undo.RecordObject(view, "Migrate desk interactions");
             var desk = (RectTransform)view.documentsRoot.parent;
             var font = view.identitySummary.font;
-            // The focused perspective camera crops a little of the nominal 1200x675 face.
-            // Keep the entire dragged item inside its visible work area, below the dialogue.
+            // 원근 카메라에서 면 가장자리가 일부 잘리므로 명목 해상도보다 안쪽을 작업 영역으로 쓴다.
+            // 물품 전체가 대사 아래의 실제 보이는 영역에 머물게 한다.
             var bounds = desk.Find("VisibleItemBounds") as RectTransform;
             if (bounds == null) bounds = Rect("VisibleItemBounds", desk, Vector2.zero, Vector2.zero);
             ConfigureRect(bounds, new Vector2(0, -102.5f), new Vector2(1080, 415));
             ConfigureRect(view.hint.rectTransform, new Vector2(0, -215), new Vector2(1100, 32));
 
-            // Move the existing authored graphics into their owning document, retaining world layout and aliases.
+            // 기존 그래픽을 문서의 자식으로 옮기면서 월드 배치와 직렬화된 참조를 유지한다.
             view.identityDocument = Ensure<IdentityDocumentView>(view.identityButton.gameObject);
             Reparent(view.identitySummary.transform, view.identityButton.transform);
             view.identityDocument.content = view.identitySummary;
@@ -84,7 +85,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
                 Vector2 size = i == 0 ? new Vector2(180, 50) : i == 1 ? new Vector2(140, 65) : new Vector2(210, 40);
                 var rect = existing != null ? (RectTransform)existing
                     : Rect(name, desk, Vector2.zero, size);
-                // Apply to existing migrated items too; rerunning must repair their saved origins.
+                // 재실행 시 이미 이관된 소품에도 배치를 적용하여 저장된 기본 위치를 정렬한다.
                 ConfigureRect(rect, new Vector2((i - 1) * 370, -270), size);
                 var graphic = Ensure<UnityEngine.UI.Image>(rect.gameObject);
                 Color color = i == 0 ? new Color(.72f, .77f, .78f)
@@ -108,8 +109,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             view.deskItems = items.ToArray();
             BuildDummyPanel(view, font);
             ConfigureFocus(view);
-            // Repeated moves to a shield's old index can put existing items after it.
-            // Finalize the shield order once, after all existing/new desk children are handled.
+            // 자식을 옮기는 중에는 형제 인덱스가 달라지므로 모든 배치가 끝난 뒤 차단막을 맨 위로 확정한다.
             Undo.RecordObject(view.modalShield.transform, "Keep modal shield above desk items");
             view.modalShield.transform.SetAsLastSibling();
             foreach (var doc in new MonoBehaviour[] { view.identityDocument, view.orderDocument,
@@ -121,10 +121,11 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             EditorUtility.SetDirty(view);
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
-            // Saving the scene is intentionally left to the sole Editor owner after inspecting migration results.
+            // 씬 저장은 이관 결과를 확인한 단일 Editor 담당자가 수행한다.
             Debug.Log("Desk migrated in place: 4 connected document prefab instances and 5 shared desk items; flow/roster/timing preserved.", view);
         }
 
+        /// <summary>문서와 책상 배치를 유지한 채 동일 원본을 확대하는 계층과 제어부만 추가·갱신한다.</summary>
         [MenuItem("Tools/Inspection MVP/Migrate original object focus")]
         [Button("Migrate original object focus only")]
         public static void ApplyFocus()
@@ -143,6 +144,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             Debug.Log("Original object focus migrated in place; compact prefab instances and saved desk positions preserved.", view);
         }
 
+        // 런타임은 복제 문서가 아니라 기존 인스턴스를 이 캔버스로 옮겼다가 되돌린다.
         private static void ConfigureFocus(InspectionMvpView view)
         {
             Undo.RecordObject(view, "Configure original object focus");
@@ -157,7 +159,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             var raycaster = Ensure<DistortionCorrectedGraphicRaycaster>(root.gameObject);
             raycaster.ConfigureFaceGate(view.navigation, CubeFace.Bottom);
             EditorUtility.SetDirty(view.focusCanvas); EditorUtility.SetDirty(raycaster);
-            // The same shield now covers the focused world plane; it remains the last canvas sibling.
+            // 기존 차단막을 확대용 월드 평면으로 옮기고 캔버스의 마지막 형제로 유지한다.
             Reparent(view.modalShield.transform, root);
             ConfigureRect((RectTransform)view.modalShield.transform, Vector2.zero, new Vector2(10000, 10000));
             view.modalShield.transform.localScale = Vector3.one;
@@ -182,7 +184,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
 
         private static void ConfigureIdentityPortrait(IdentityDocumentView document)
         {
-            // A permanent child of the compact original travels with that same instance on focus.
+            // 초상을 원본 문서의 영구 자식으로 두어 확대 중에도 같은 인스턴스를 따라가게 한다.
             var portraitRect = document.transform.Find("FocusedPortrait") as RectTransform;
             if (portraitRect == null)
                 portraitRect = Rect("FocusedPortrait", document.transform, new Vector2(145, 0), new Vector2(74, 78));
@@ -202,7 +204,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(document);
             string path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(document.gameObject);
             if (path != Prefabs + "/IdentityDocument.prefab") return;
-            // Apply only the new visual and its reference, preserving scene-only host/desk overrides.
+            // 새 초상과 그 참조만 프리팹에 반영하여 씬 전용 host/desk 오버라이드를 보존한다.
             if (PrefabUtility.IsAddedGameObjectOverride(portraitRect.gameObject))
                 PrefabUtility.ApplyAddedGameObject(portraitRect.gameObject, path, InteractionMode.AutomatedAction);
             var serialized = new SerializedObject(document);
@@ -219,6 +221,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(rect);
         }
 
+        // 예상한 프리팹 연결은 재사용하고 다른 연결은 덮어쓰지 않아 기존 에셋 관계를 보존한다.
         private static void Connect(GameObject instance, string name)
         {
             string path = Prefabs + "/" + name + ".prefab";
@@ -257,7 +260,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
         private static T Ensure<T>(GameObject target) where T : Component
         {
             var component = target.GetComponent<T>();
-            // Unity may return a missing native component wrapper, which is not CLR null.
+            // Unity의 네이티브 객체가 사라진 래퍼는 CLR null이 아닐 수 있으므로 Unity의 null 비교를 사용한다.
             return component != null ? component : Undo.AddComponent<T>(target);
         }
         private static void Reparent(Transform child, Transform parent)

@@ -1,3 +1,5 @@
+// FaceDepthVisual이 넘기는 물체별 블러·국소 왜곡 값으로 깊이감을 표현한다.
+// 두 Pass는 각각 2D Renderer와 일반 URP Renderer에서 같은 효과를 제공하기 위한 진입점이다.
 Shader "SheIsNotHuman/Face Depth Sprite"
 {
     Properties
@@ -72,6 +74,7 @@ Shader "SheIsNotHuman/Face Depth Sprite"
             half4 SamplePremultiplied(float2 uv, half4 tint)
             {
                 half4 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, saturate(uv)) * tint;
+                // Blend One OneMinusSrcAlpha와 맞춰 투명 픽셀의 RGB가 블러 경계에 번지지 않게 한다.
                 color.rgb *= color.a;
                 return color;
             }
@@ -82,12 +85,14 @@ Shader "SheIsNotHuman/Face Depth Sprite"
                 float radiusSquared = dot(centered, centered);
                 float2 warpedUv = _WarpCenter.xy + centered * (1.0 + _LocalWarp * radiusSquared);
 
+                // 텍셀 단위 간격을 유지하며, 블러가 0이면 아홉 번 샘플링하는 비용을 피한다.
                 float blurRadius = round(clamp(_PixelBlurRadius, 0.0, 3.0));
                 if (blurRadius < 0.5)
                 {
                     return SamplePremultiplied(warpedUv, input.color);
                 }
 
+                // 정수 간격의 3×3 평균으로 스프라이트 해상도가 달라도 같은 픽셀 반경을 사용한다.
                 float2 texel = _MainTex_TexelSize.xy * blurRadius;
                 half4 sum = 0.0h;
 
@@ -109,6 +114,7 @@ Shader "SheIsNotHuman/Face Depth Sprite"
         Pass
         {
             Name "ForwardUnlit"
+            // 일반 URP Renderer용 경로도 위 Universal2D 경로와 샘플링·알파 계산을 동일하게 유지한다.
             Tags { "LightMode" = "SRPDefaultUnlit" }
 
             Cull Off

@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace SheIsNotHuman.InspectionMvp
 {
+    /// <summary>방문자 한 명의 대사·서류·반응을 묶는 저작용 에셋이다. 진행 상태는 컨트롤러가 별도로 보관한다.</summary>
     [CreateAssetMenu(fileName = "InspectionNpc", menuName = "She Is Not Human/Inspection NPC")]
     public sealed class InspectionNpcData : ScriptableObject
     {

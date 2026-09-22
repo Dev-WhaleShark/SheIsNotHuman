@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace SheIsNotHuman.InspectionMvp
 {
-    /// <summary>Presentation only: the flow controller owns every gameplay decision.</summary>
+    /// <summary>검수 화면의 입력 연결과 연출을 담당한다. 게임 진행·판정은 InspectionFlowController에 요청한다.</summary>
     public sealed class InspectionMvpView : InspectionPresentation
     {
         [Title("Scene wiring"), Required] public PerspectiveCubeViewController navigation;
@@ -61,9 +61,12 @@ namespace SheIsNotHuman.InspectionMvp
         private readonly List<FocusSnapshot> focused = new List<FocusSnapshot>();
         private Tween dialogueTween;
         private Vector2 dialogueOrigin;
+        // 취소된 코루틴이 yield 이후 재개되어 새 화면을 덮어쓰지 못하도록 실행 세대를 비교한다.
         private int activityVersion;
+        // 대사만 새로 표시한 경우에도 이전 숨김 연출이 새 대사를 꺼 버리지 못하게 별도로 구분한다.
         private int dialogueVersion;
 
+        /// <summary>입력 콜백을 현재 컨트롤러에 연결한다. 재시작마다 리스너가 쌓이지 않도록 기존 연결을 해제한다.</summary>
         public override void Initialize(InspectionFlowController owner)
         {
             if (initialized) Unwire();
@@ -86,6 +89,7 @@ namespace SheIsNotHuman.InspectionMvp
             ResetPresentation();
         }
 
+        // 버튼의 interactable 표시와 실제 콜백 모두에서 검사해 회전·연출 중 들어온 요청도 막는다.
         private bool Stable => !motionBusy && !modalBusy && (navigation == null || !navigation.IsTurning);
         private bool OnFace(CubeFace face) => navigation == null || (navigation.isActiveAndEnabled && !navigation.IsTurning && navigation.CurrentFace == face);
         private void Advance() { if (OnFace(CubeFace.Bottom) && Stable && !modalOpen && !DeskInspectableItem.AnyPointerInteraction) flow.AdvanceDialogue(); }
@@ -102,12 +106,14 @@ namespace SheIsNotHuman.InspectionMvp
         private void FocusDesk() { if (OnFace(CubeFace.Front) && Stable && !modalOpen && !DeskInspectableItem.AnyPointerInteraction) navigation.FocusFace(CubeFace.Bottom, flow.animateTransitions); }
         private void FocusFront() { if (OnFace(CubeFace.Bottom) && Stable && !modalOpen && !DeskInspectableItem.AnyPointerInteraction) navigation.FocusFace(CubeFace.Front, flow.animateTransitions); }
 
+        /// <summary>현재 면·상태·포인터 점유를 기준으로 물품 입력을 허용한다. 소품은 대화/완료 단계에도 열 수 있다.</summary>
         public bool CanInteractWith(DeskInspectableItem item) => item != null && initialized && isActiveAndEnabled && Stable && !modalOpen
             && (navigation == null || (navigation.isActiveAndEnabled && navigation.CurrentFace == CubeFace.Bottom && !navigation.IsTurning))
             && (DeskInspectableItem.ActiveItem == null || DeskInspectableItem.ActiveItem == item)
             && (item.kind == DeskItemKind.Document ? state == InspectionState.Inspecting
                 : state == InspectionState.Dialogue || state == InspectionState.Inspecting || state == InspectionState.Completed);
 
+        /// <summary>문서는 컨트롤러의 검사 흐름으로, 소품은 판정 없는 자체 확대 흐름으로 전달한다.</summary>
         public void ExpandItem(DeskInspectableItem item)
         {
             if (!CanInteractWith(item)) return;
@@ -137,9 +143,11 @@ namespace SheIsNotHuman.InspectionMvp
             foreach (var item in deskItems)
                 if (item != null && (!documentsOnly || item.kind == DeskItemKind.Document)) item.RestorePosition();
         }
+        /// <summary>물품이 포인터를 점유하거나 놓은 즉시 버튼과 화면 회전의 잠금을 갱신한다.</summary>
         public void RefreshDeskInput() { if (initialized) RefreshInput(); }
 
         private void Update() { if (initialized) RefreshInput(); }
+        // 상태별 입력 허용을 한곳에서 갱신한다. 모달뿐 아니라 서류 이동·물품 누르기도 화면 회전을 잠근다.
         private void RefreshInput()
         {
             bool stable = Stable && !DeskInspectableItem.AnyPointerInteraction && OnFace(CubeFace.Bottom);
@@ -158,6 +166,7 @@ namespace SheIsNotHuman.InspectionMvp
                     || (state != InspectionState.Dialogue && state != InspectionState.Inspecting && state != InspectionState.Completed);
         }
 
+        /// <summary>연출과 확대를 취소한 뒤 원래 위치·투명도·문서 표시를 새 실행의 시작 상태로 돌린다.</summary>
         public override void ResetPresentation()
         {
             CancelActivity();
@@ -180,6 +189,7 @@ namespace SheIsNotHuman.InspectionMvp
             SetState(InspectionState.Initializing);
         }
 
+        /// <summary>확대 원본을 먼저 복원한 뒤 다음 방문자의 서류를 연결하고 기본 책상 위치를 적용한다.</summary>
         public override void BindNpc(InspectionNpcData npc)
         {
             RestoreFocusedItems();
@@ -195,6 +205,7 @@ namespace SheIsNotHuman.InspectionMvp
             documentsGroup.interactable = documentsGroup.blocksRaycasts = false;
         }
 
+        /// <summary>숨김 연출을 무효화하고 Text Animator의 타이핑으로 새 문장을 표시한다.</summary>
         public override void ShowDialogue(string text)
         {
             RestoreDialogue();
@@ -202,8 +213,11 @@ namespace SheIsNotHuman.InspectionMvp
             dialogueWriter.SetTypewriterSpeed(typingSpeed);
             dialogueWriter.ShowText(text ?? string.Empty);
         }
+        /// <summary>Text Animator의 현재 타이핑만 건너뛴다. 대사 인덱스는 컨트롤러가 관리한다.</summary>
         public override void CompleteDialogue() => dialogueWriter.SkipTypewriter();
+        /// <summary>현재 행동 안내를 즉시 갱신한다.</summary>
         public override void SetHint(string text) => hint.text = text;
+        /// <summary>진행 상태를 받아 입력을 갱신한다. 단계가 바뀌면 진행 중인 물품 제스처와 소품 확대를 취소한다.</summary>
         public override void SetState(InspectionState value)
         {
             if (state != value)
@@ -222,6 +236,7 @@ namespace SheIsNotHuman.InspectionMvp
             while (navigation.IsTurning) yield return null;
         }
 
+        /// <summary>정면 입장 연출 후 책상으로 시점을 이동한다. 대기 지점마다 취소 여부를 확인한다.</summary>
         public override IEnumerator EnterNpc(bool animate)
         {
             int version = activityVersion;
@@ -239,6 +254,7 @@ namespace SheIsNotHuman.InspectionMvp
             motionBusy = false; RefreshInput();
         }
 
+        /// <summary>대사를 숨기고 책상에 서류를 전달한 뒤 문서 레이캐스트를 허용한다.</summary>
         public override IEnumerator HandoffItems(bool animate)
         {
             int version = activityVersion;
@@ -257,6 +273,7 @@ namespace SheIsNotHuman.InspectionMvp
             motionBusy = false; RefreshInput();
         }
 
+        /// <summary>문서나 소품 원본을 확대 영역으로 이동하고 닫을 때 복원한다. 전환 전체에서 배경 입력을 차단한다.</summary>
         public override IEnumerator SetInspectionOpen(bool open, bool animate)
         {
             int version = activityVersion;
@@ -290,6 +307,7 @@ namespace SheIsNotHuman.InspectionMvp
             modalBusy = false; RefreshInput();
         }
 
+        /// <summary>확대 원본을 책상으로 복귀시킨 뒤 서류를 회수하고 확정된 판정을 표시한다.</summary>
         public override IEnumerator ResolveDocuments(InspectionDecision decision, bool animate)
         {
             int version = activityVersion;
@@ -303,7 +321,7 @@ namespace SheIsNotHuman.InspectionMvp
             documentsGroup.alpha = 0;
             documentsGroup.interactable = documentsGroup.blocksRaycasts = false;
             documentsRoot.anchoredPosition = documentsOrigin;
-            // The result remains visible on the desk while the controller shows the NPC reaction.
+            // 컨트롤러가 NPC 반응을 표시하는 동안에도 판정 결과는 책상에 남긴다.
             resultStamp.text = decision == InspectionDecision.Pass ? "PASS" : "NON PASS";
             resultStamp.color = decision == InspectionDecision.Pass ? new Color(.1f,.55f,.3f) : new Color(.75f,.18f,.12f);
             resultStamp.gameObject.SetActive(true);
@@ -317,6 +335,7 @@ namespace SheIsNotHuman.InspectionMvp
             motionBusy = false; RefreshInput();
         }
 
+        /// <summary>대사를 숨기고 정면에서 퇴장시킨 뒤 이전 방문자의 표시 데이터를 비운다.</summary>
         public override IEnumerator ExitNpc(bool animate)
         {
             int version = activityVersion;
@@ -334,6 +353,7 @@ namespace SheIsNotHuman.InspectionMvp
             motionBusy = false; RefreshInput();
         }
 
+        /// <summary>남은 연출을 정리하고 책상에 완료 안내와 재시작 버튼을 표시한다.</summary>
         public override void ShowCompleted()
         {
             CancelActivity();
@@ -346,6 +366,7 @@ namespace SheIsNotHuman.InspectionMvp
             RefreshInput();
         }
 
+        // 일시정지 배율과 무관하게 UI 연출을 진행하고 GameObject 수명에 연결한다. 취소 시 완료 콜백은 실행하지 않는다.
         private IEnumerator Play(Tween tween)
         {
             int version = activityVersion;
@@ -353,6 +374,7 @@ namespace SheIsNotHuman.InspectionMvp
             yield return activeTween.WaitForCompletion();
             if (version == activityVersion) activeTween = null;
         }
+        /// <summary>기존 실행 세대를 폐기하고 트윈·타이핑·입력 점유를 정리한다. 확대된 동일 원본도 반드시 복원한다.</summary>
         public override void CancelActivity()
         {
             activityVersion++;
@@ -416,7 +438,7 @@ namespace SheIsNotHuman.InspectionMvp
         private void PrepareFocus()
         {
             RestoreFocusedItems();
-            // Capture every original before changing any sibling indices.
+            // 복제본을 만들지 않는다. 한 원본을 이동하면 형제 순서가 바뀌므로 모든 원본을 먼저 기록한다.
             if (dummyMode) focused.Add(new FocusSnapshot((RectTransform)selectedDummy.transform));
             else
             {
@@ -424,6 +446,7 @@ namespace SheIsNotHuman.InspectionMvp
                 focused.Add(new FocusSnapshot((RectTransform)orderButton.transform));
             }
             var camera = navigation.ViewCamera;
+            // 기존 원본보다 카메라에 가까운 평면을 쓰되 near clip 바깥에 두어 확대 중 잘림을 피한다.
             float depth = float.PositiveInfinity;
             foreach (var snapshot in focused)
                 depth = Mathf.Min(depth, Vector3.Dot(snapshot.Rect.position - camera.transform.position, camera.transform.forward));
@@ -470,6 +493,7 @@ namespace SheIsNotHuman.InspectionMvp
             text.margin = Vector4.zero;
         }
 
+        // 닫기뿐 아니라 취소·NPC 교체 경로도 같은 복원을 사용해 원본이 확대 계층에 남지 않게 한다.
         private void RestoreFocusedItems()
         {
             foreach (var snapshot in focused) snapshot.Restore();
@@ -477,7 +501,7 @@ namespace SheIsNotHuman.InspectionMvp
             if (focusCanvas != null) focusCanvas.gameObject.SetActive(false);
         }
 
-        // This snapshot is taken at click time, after the last drag/drop, never from a saved origin.
+        // 최초 저장 위치가 아닌 클릭 직전 상태를 기록한다. 사용자가 옮긴 위치와 형제 순서를 그대로 복원해야 한다.
         private sealed class FocusSnapshot
         {
             public readonly RectTransform Rect;
@@ -506,6 +530,7 @@ namespace SheIsNotHuman.InspectionMvp
                 expanded = identity != null ? identity.expanded : order != null && order.expanded;
             }
 
+            // 같은 RectTransform을 재부모화하므로 문서 데이터와 컴포넌트의 동일성이 유지된다.
             public void Prepare(RectTransform parent, Vector2 position, Vector2 size, float scale)
             {
                 Rect.SetParent(parent, true);
@@ -517,6 +542,7 @@ namespace SheIsNotHuman.InspectionMvp
                 destinationSize = size;
             }
 
+            // 확대 캔버스의 배율이 달라도 닫기 연출 끝의 월드 크기가 클릭 시점과 같아야 한다.
             public void Animate(Sequence sequence, bool opening, float duration)
             {
                 Vector3 returnScale = new Vector3(worldScale.x / Rect.parent.lossyScale.x,
@@ -537,6 +563,7 @@ namespace SheIsNotHuman.InspectionMvp
             }
         }
 
+        // 원본 및 자식의 계층·레이아웃을 함께 저장해 확대용 서식이 책상 배치에 남지 않게 한다.
         private sealed class RectState
         {
             private readonly RectTransform rect;
@@ -561,6 +588,7 @@ namespace SheIsNotHuman.InspectionMvp
             }
         }
 
+        // 확대 중 바꾼 줄 배치·글자 크기·본문을 모두 복원한다. 데이터 에셋을 다시 만들 필요가 없다.
         private sealed class TextState
         {
             private readonly TMP_Text text;
@@ -604,8 +632,8 @@ namespace SheIsNotHuman.InspectionMvp
         }
         private void OnDisable()
         {
-            // The controller hosts presentation enumerators, so disabling only this component
-            // must cancel that host too before it can issue the next NPC/reaction callback.
+            // 표현 열거자는 컨트롤러에서 실행되므로 뷰만 비활성화해도 호스트를 멈춰야 한다.
+            // 그렇지 않으면 취소 후에도 다음 NPC나 반응 콜백이 다시 화면을 갱신할 수 있다.
             if (flow != null) flow.StopAllCoroutines();
             StopAllCoroutines();
             CancelActivity();

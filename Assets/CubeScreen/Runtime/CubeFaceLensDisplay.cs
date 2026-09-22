@@ -75,6 +75,7 @@ namespace SheIsNotHuman.CubeScreen
             ApplyProperties();
         }
 
+        /// <summary>Inspector 또는 외부 호출로 현재 렌즈 설정을 해당 면의 Renderer에 다시 적용한다.</summary>
         [ContextMenu("Refresh Lens")]
         [Button("렌즈 즉시 갱신", ButtonSizes.Medium)]
         public void RefreshLens()

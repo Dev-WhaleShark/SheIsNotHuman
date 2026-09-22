@@ -44,22 +44,26 @@ namespace SheIsNotHuman.CubeScreen
         [LabelText("최대 블러 반경")]
         [SerializeField, Range(0, 3)] private int maxBlurRadius = 3;
 
+        /// <summary>카메라 전방 깊이를 먼 쪽 0, 가까운 쪽 1인 곡선 입력으로 정규화한다.</summary>
         public float EvaluateDepth01(float viewDepth)
         {
             float range = Mathf.Max(0.01f, farDepth - nearDepth);
             return Mathf.Clamp01((farDepth - viewDepth) / range);
         }
 
+        /// <summary>정규화 깊이의 크기 곡선을 평가하며 시각 루트가 사라지지 않도록 양수를 보장한다.</summary>
         public float EvaluateScale(float viewDepth)
         {
             return Mathf.Max(0.01f, scaleByDepth.Evaluate(EvaluateDepth01(viewDepth)));
         }
 
+        /// <summary>기준 위치의 XY 확장 배율을 반환하며 음수 반전은 허용하지 않는다.</summary>
         public float EvaluateSpread(float viewDepth)
         {
             return Mathf.Max(0f, spreadByDepth.Evaluate(EvaluateDepth01(viewDepth)));
         }
 
+        /// <summary>초점 앞뒤의 거리를 동일하게 취급해 셰이더용 정수 블러 반경을 반환한다.</summary>
         public int EvaluateBlurRadius(float viewDepth)
         {
             float distance = Mathf.Abs(viewDepth - focusDepth);

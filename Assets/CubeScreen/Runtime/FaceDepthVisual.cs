@@ -5,6 +5,7 @@ namespace SheIsNotHuman.CubeScreen
 {
     /// <summary>
     /// 객체 깊이를 가짜 원근과 픽셀 블러 값으로 변환한다.
+    /// 저장된 기준 자세에서 효과를 계산하며 에디터 미리보기와 런타임 갱신에 같은 경로를 사용한다.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
@@ -86,6 +87,7 @@ namespace SheIsNotHuman.CubeScreen
             ApplyEffects();
         }
 
+        /// <summary>현재 자세를 새 기준으로 채택한 뒤 효과를 적용한다. 재호출하면 기준도 바뀐다.</summary>
         [Button("현재 Transform을 기준값으로 저장", ButtonSizes.Medium)]
         public void CaptureBasePose()
         {
@@ -95,6 +97,7 @@ namespace SheIsNotHuman.CubeScreen
             ApplyEffects();
         }
 
+        /// <summary>카메라 전방 깊이로 크기·위치·블러를 갱신한다. 자동 매 프레임 갱신은 하지 않는다.</summary>
         [Button("깊이 효과 갱신", ButtonSizes.Medium)]
         public void ApplyEffects()
         {
@@ -103,6 +106,7 @@ namespace SheIsNotHuman.CubeScreen
                 return;
             }
 
+            // 유클리드 거리가 아니라 카메라 전방 성분을 사용해 같은 깊이 평면의 효과를 맞춘다.
             float viewDepth = Vector3.Dot(
                 transform.position - captureCamera.transform.position,
                 captureCamera.transform.forward);
@@ -110,12 +114,14 @@ namespace SheIsNotHuman.CubeScreen
             float spread = profile.EvaluateSpread(viewDepth);
             float scale = overrideScale ? scaleMultiplier : profile.EvaluateScale(viewDepth);
 
+            // 현재 값에 배율을 누적하지 않는다. 저장된 XY와 크기에만 배율을 적용하고 Z는 보존한다.
             transform.localPosition = new Vector3(
                 baseLocalPosition.x * spread,
                 baseLocalPosition.y * spread,
                 baseLocalPosition.z);
             visualRoot.localScale = baseVisualScale * scale;
 
+            // 블러 제외가 수동 지정과 프로파일보다 우선한다.
             int resolvedBlur = excludeBlur
                 ? 0
                 : overrideBlur
@@ -125,6 +131,7 @@ namespace SheIsNotHuman.CubeScreen
             ApplyRendererProperties(resolvedBlur);
         }
 
+        /// <summary>생성 도구가 참조와 개별 보정을 연결하고 현재 자세를 기준으로 최초 효과를 적용한다.</summary>
         public void Initialize(
             FaceDepthEffectProfile depthProfile,
             Camera faceCamera,
@@ -174,6 +181,7 @@ namespace SheIsNotHuman.CubeScreen
                     continue;
                 }
 
+                // 공유 머티리얼과 다른 효과의 속성을 보존하고 이 컴포넌트 담당 값만 덮어쓴다.
                 targetRenderer.GetPropertyBlock(_propertyBlock);
                 _propertyBlock.SetFloat(PixelBlurRadiusId, resolvedBlur);
                 _propertyBlock.SetFloat(LocalWarpId, localWarp);

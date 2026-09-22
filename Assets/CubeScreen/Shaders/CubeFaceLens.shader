@@ -1,3 +1,5 @@
+// 각 면의 RenderTexture를 표시할 때만 적용하는 렌즈 효과이다.
+// CubeFaceLensDisplay가 전달하는 렌즈 속성을 사용하며, MVP의 URP 후처리와는 별도 경로이다.
 Shader "SheIsNotHuman/Cube Face Lens"
 {
     Properties
@@ -72,18 +74,22 @@ Shader "SheIsNotHuman/Cube Face Lens"
             half4 Frag(Varyings input) : SV_Target
             {
                 float2 baseUv = input.uv;
+                // 가로세로 비율을 보정한 공간에서 반경을 계산해 직사각형 면에도 같은 렌즈 모양을 적용한다.
                 float safeAspect = max(_Aspect, 0.001);
                 float2 centered = baseUv - _LensCenter.xy;
                 float2 radial = float2(centered.x * safeAspect, centered.y);
                 float radiusSquared = dot(radial, radial);
+                // r² 항은 전체 굴곡, r⁴ 항은 가장자리 굴곡에 더 큰 영향을 준다.
                 float warp = 1.0 + (_Distortion * radiusSquared)
                     + (_Distortion2 * radiusSquared * radiusSquared);
                 radial *= warp / max(_Zoom, 0.001);
 
                 float2 warpedOffset = float2(radial.x / safeAspect, radial.y);
                 float2 sampleUv = _LensCenter.xy + warpedOffset;
+                // 녹색 채널은 기본 sampleUv를 사용하고, 적색·청색을 양쪽으로 벌려 색수차를 만든다.
                 float2 aberration = warpedOffset * _ChromaticAberration * (1.0 + radiusSquared);
 
+                // 샘플 좌표를 면 안에 제한하므로 바깥쪽은 텍스처의 가장자리 색으로 채워진다.
                 float2 redUv = saturate(sampleUv + aberration);
                 float2 greenUv = saturate(sampleUv);
                 float2 blueUv = saturate(sampleUv - aberration);

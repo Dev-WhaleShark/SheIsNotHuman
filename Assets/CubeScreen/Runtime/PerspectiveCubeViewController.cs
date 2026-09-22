@@ -10,6 +10,7 @@ namespace SheIsNotHuman.CubeScreen
 {
     /// <summary>
     /// 단일 Perspective 카메라를 육면체의 각 면으로 회전한다.
+    /// 정면의 로컬 자세를 기준으로 회전·이동·화각·렌즈 강도를 함께 전환한다.
     /// </summary>
     public sealed class PerspectiveCubeViewController : MonoBehaviour
     {
@@ -40,10 +41,15 @@ namespace SheIsNotHuman.CubeScreen
         private bool _isDragging;
 #endif
 
+        /// <summary>전환 시작 때 목표 면으로 바뀐다. 입력 가능 여부는 IsTurning도 함께 확인해야 한다.</summary>
         public CubeFace CurrentFace { get; private set; } = CubeFace.Front;
+        /// <summary>시퀀스가 존재하는 동안 면 UI와 추가 사용자 탐색을 막는다.</summary>
         public bool IsTurning => _turnSequence != null;
+        // 시작/완료/비활성화 시 입력 게이트가 같은 호출 안에서 상태를 갱신하도록 알린다.
         internal event System.Action FaceInputStateChanged;
+        /// <summary>공통 내비게이션의 화면 픽셀 영역 판정에도 사용하는 표시 카메라다.</summary>
         public Camera ViewCamera => viewCamera;
+        // 일반 탐색은 활성 상태·모달 잠금·전환 상태·현재 면의 이동 규칙을 모두 통과해야 한다.
         public bool CanTurnLeft => isActiveAndEnabled && !InputBlocked && !IsTurning && IsHorizontalFace(CurrentFace);
         public bool CanTurnRight => CanTurnLeft;
         public bool CanTurnUp => isActiveAndEnabled && !InputBlocked && !IsTurning
@@ -52,6 +58,7 @@ namespace SheIsNotHuman.CubeScreen
             && (CurrentFace == CubeFace.Front || CurrentFace == CubeFace.Top);
         private bool _inputBlocked;
 
+        /// <summary>사용자 탐색만 잠근다. 잠금 시 진행 중 드래그를 취소하며 FocusFace는 계속 허용한다.</summary>
         [Sirenix.OdinInspector.ShowInInspector, Sirenix.OdinInspector.ReadOnly]
         public bool InputBlocked
         {
@@ -65,7 +72,10 @@ namespace SheIsNotHuman.CubeScreen
             }
         }
 
-        /// <summary>Inspection flow can focus its two faces while player navigation is locked.</summary>
+        /// <summary>
+        /// 검사 흐름이 탐색 잠금 중에도 Front/Bottom으로 시점을 지정한다.
+        /// animate가 false이면 완료 콜백까지 실행해 자세와 입력 상태를 즉시 확정한다.
+        /// </summary>
         public void FocusFace(CubeFace face, bool animate)
         {
             if (!isActiveAndEnabled || viewCamera == null ||
@@ -101,6 +111,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void OnDisable()
         {
+            // 먼저 입력 게이트를 닫고, 트윈 취소 후에는 중간 자세가 아닌 저장된 목표로 정착한다.
             FaceInputStateChanged?.Invoke();
 #if ENABLE_INPUT_SYSTEM
             _isDragging = false;
@@ -127,6 +138,7 @@ namespace SheIsNotHuman.CubeScreen
 #endif
         }
 
+        /// <summary>일반 탐색이 허용될 때 수평 네 면을 왼쪽으로 순환한다.</summary>
         public void TurnLeft()
         {
             if (!CanTurnLeft)
@@ -139,6 +151,7 @@ namespace SheIsNotHuman.CubeScreen
             BeginTurn(_frontRotation * Quaternion.Euler(0f, _horizontalIndex * 90f, 0f), horizontalFieldOfView);
         }
 
+        /// <summary>일반 탐색이 허용될 때 수평 네 면을 오른쪽으로 순환한다.</summary>
         public void TurnRight()
         {
             if (!CanTurnRight)
@@ -151,6 +164,7 @@ namespace SheIsNotHuman.CubeScreen
             BeginTurn(_frontRotation * Quaternion.Euler(0f, _horizontalIndex * 90f, 0f), horizontalFieldOfView);
         }
 
+        /// <summary>Front에서 Top으로 이동하거나 Bottom에서 정면 기준 자세로 복귀한다.</summary>
         public void TurnUp()
         {
             if (!CanTurnUp)
@@ -169,6 +183,7 @@ namespace SheIsNotHuman.CubeScreen
             }
         }
 
+        /// <summary>Front에서 Bottom으로 이동하거나 Top에서 정면 기준 자세로 복귀한다.</summary>
         public void TurnDown()
         {
             if (!CanTurnDown)
@@ -197,6 +212,7 @@ namespace SheIsNotHuman.CubeScreen
         private void BeginTurn(Quaternion destination, float destinationFieldOfView)
         {
 #if ENABLE_INPUT_SYSTEM
+            // 전환 전에 시작한 드래그가 전환 후 새 탐색으로 이어지지 않도록 무효화한다.
             _isDragging = false;
 #endif
             _targetRotation = destination;
@@ -207,6 +223,7 @@ namespace SheIsNotHuman.CubeScreen
             _targetFieldOfView = destinationFieldOfView;
             // Bottom은 같은 카메라에서 후처리만 꺼 평면 UI로 보여 준다.
             _targetLensWeight = CurrentFace == CubeFace.Bottom ? 0f : _normalLensWeight;
+            // 강제 초점 이동은 기존 전환을 대체할 수 있다. 시퀀스는 항상 하나만 유지한다.
             _turnSequence?.Kill();
             _turnSequence = DOTween.Sequence()
                 .SetUpdate(true)
@@ -225,7 +242,7 @@ namespace SheIsNotHuman.CubeScreen
                     _turnSequence = null;
                     FaceInputStateChanged?.Invoke();
                 });
-            // Synchronize keyboard/submit gates immediately, even inside an EventSystem callback.
+            // EventSystem 콜백 안에서 시작해도 키보드/제출 게이트를 즉시 닫는다.
             FaceInputStateChanged?.Invoke();
         }
 

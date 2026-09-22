@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace SheIsNotHuman.InspectionMvp.Editor
 {
-    /// <summary>Targeted, repeatable migration; never rebuilds the inspection scene.</summary>
+    /// <summary>기존 검수 씬의 화면 전환과 왜곡 보정 레이캐스터만 갱신하는 Odin 도구다. 씬을 재생성하지 않는다.</summary>
     public sealed class InspectionNavigationMigration : OdinEditorWindow
     {
         private const string ScenePath = "Assets/Scenes/PerspectiveCubeViewPrototype.unity";
@@ -19,6 +19,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
         [MenuItem("Tools/Inspection MVP/Navigation Migration")]
         private static void OpenWindow() => GetWindow<InspectionNavigationMigration>("Inspection Navigation");
 
+        /// <summary>지정 씬의 면별 입력 게이트와 가장자리 버튼을 연결하고 씬을 저장한다.</summary>
         [Button("Apply navigation and corrected raycasters")]
         public static void Apply()
         {
@@ -33,7 +34,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             if (camera == null) throw new InvalidOperationException("Perspective view camera is missing.");
             var faces = scene.GetRootGameObjects().Single(root => root.name == "CubeFaces");
             var canvases = faces.GetComponentsInChildren<Canvas>(true);
-            // Resolve all ownership before changing anything; ambiguous names must not open an input gate.
+            // 면 이름이 모호한 캔버스에 입력을 열지 않도록 변경 전에 모든 캔버스의 소속을 확정한다.
             var faceCanvases = canvases.Select(canvas => new
             {
                 Canvas = canvas,
@@ -86,7 +87,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             serialized.FindProperty("controller").objectReferenceValue = null;
             serialized.FindProperty("perspectiveController").objectReferenceValue = navigation;
             serialized.FindProperty("canvasRect").objectReferenceValue = overlayCanvas.transform;
-            // Only upgrade the previous default; later artist-authored thresholds survive reruns.
+            // 이전 기본값만 갱신하여 이후 사용자가 조정한 임계값은 재실행해도 보존한다.
             var revealDistance = serialized.FindProperty("edgeRevealDistance");
             if (revealDistance.floatValue == 44f) revealDistance.floatValue = 96f;
             ConfigureButton(serialized, overlay.transform, "left", "<", font, new Vector2(0, 0), new Vector2(0, 1), new Vector2(.5f, .5f), new Vector2(22, 0), new Vector2(44, 0));
@@ -102,6 +103,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             Debug.Log($"Navigation migration saved: {canvases.Length} face canvases inspected; edge hover reveals buttons, click rotates.");
         }
 
+        // 정확한 조상 이름으로 소속을 찾는다. 추측한 면으로 입력을 허용하면 반대편 UI도 클릭될 수 있다.
         private static CubeFace ResolveFace(Transform target, Transform facesRoot)
         {
             for (var current = target; current != null && current != facesRoot; current = current.parent)
@@ -119,6 +121,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             throw new InvalidOperationException($"Canvas {target.name} has no exact Face_<CubeFace> ancestor.");
         }
 
+        // 일반/보정 레이캐스터가 함께 입력을 처리하지 않도록 하나만 유지하고 기존 차폐 설정은 이관한다.
         private static void InstallRaycaster(Canvas canvas, PerspectiveCubeViewController controller, CubeFace face)
         {
             var existing = canvas.GetComponents<UnityEngine.UI.GraphicRaycaster>();
@@ -145,10 +148,10 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             if (graphic == null) return;
             var effects = graphic.GetComponents<UnityEngine.UI.Shadow>();
             if (effects.Length == 0) return;
-            Vector4 extent = Vector4.zero; // Left, bottom, right, top in RectTransform units.
+            Vector4 extent = Vector4.zero; // RectTransform 단위의 왼쪽·아래·오른쪽·위 확장량.
             foreach (var effect in effects)
             {
-                // Include currently hidden modal graphics: their enabled effects render when opened.
+                // 현재 숨겨진 모달도 열렸을 때 효과가 보이므로 활성 효과의 경계 계산에 포함한다.
                 if (!effect.enabled || effect.effectColor.a <= 0) continue;
                 Vector2 distance = effect.effectDistance;
                 if (effect is UnityEngine.UI.Outline)
@@ -165,6 +168,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
                 PrefabUtility.RecordPrefabInstancePropertyModifications(graphic);
         }
 
+        // 기존 버튼은 재사용하고 처음부터 클릭 가능하지 않도록 그룹을 숨김 상태로 연결한다.
         private static void ConfigureButton(SerializedObject overlay, Transform parent, string direction,
             string glyph, TMP_FontAsset font, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot,
             Vector2 position, Vector2 size)
@@ -201,6 +205,7 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             overlay.FindProperty(direction + "Group").objectReferenceValue = group;
         }
 
+        /// <summary>좌표 변환의 수치 기준값을 검사한다. 실제 화면이나 포인터 상호작용 검증을 대신하지 않는다.</summary>
         [Button("Check shader numeric reference vectors")]
         public static void CheckShaderCoordinates()
         {

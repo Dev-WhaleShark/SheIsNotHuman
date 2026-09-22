@@ -32,7 +32,7 @@ namespace SheIsNotHuman.CubeScreen
             && _hasValidFace
             && _controller.CanReceiveInput(_face);
 
-        // GraphicRaycaster의 입력 카메라만 별도로 지정한다.
+        /// <summary>캡처 카메라와 별개로, 사용자가 보는 투영에 맞는 UI 판정 카메라를 제공한다.</summary>
         public override Camera eventCamera => inputCamera != null ? inputCamera : base.eventCamera;
 
         protected override void Awake()
@@ -54,6 +54,7 @@ namespace SheIsNotHuman.CubeScreen
             }
         }
 
+        /// <summary>전환 중이거나 현재 면이 아니면 EventSystem의 입력 후보에서 제외한다.</summary>
         public override bool IsActive()
         {
             // EventSystem 단계에서 현재 면 외의 모든 Raycast를 제외한다.
@@ -62,6 +63,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private static bool TryResolveFace(string objectName, out CubeFace face)
         {
+            // 기존 씬의 이름 규약인 마지막 '_면이름'을 사용하므로 오브젝트 이름도 연결 계약이다.
             int separatorIndex = objectName.LastIndexOf('_');
             if (separatorIndex < 0 || separatorIndex >= objectName.Length - 1)
             {

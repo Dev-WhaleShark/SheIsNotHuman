@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace SheIsNotHuman.InspectionMvp
 {
+    /// <summary>신분증 원본의 간략/확대 표시를 담당하며 판정이나 방문자 진행은 변경하지 않는다.</summary>
     [DisallowMultipleComponent]
     public sealed class IdentityDocumentView : MonoBehaviour
     {
@@ -12,8 +13,10 @@ namespace SheIsNotHuman.InspectionMvp
         public bool expanded;
         private InspectionNpcData boundNpc;
 
+        /// <summary>현재 방문자 참조를 유지한 채 같은 문서 인스턴스의 표시만 다시 구성한다.</summary>
         public void SetExpanded(bool value) { expanded = value; Bind(boundNpc); }
 
+        /// <summary>원본 데이터에서 표시를 갱신한다. 데이터가 없으면 이전 방문자의 내용도 지운다.</summary>
         public void Bind(InspectionNpcData npc)
         {
             boundNpc = npc;
@@ -29,6 +32,7 @@ namespace SheIsNotHuman.InspectionMvp
             }
         }
 
+        /// <summary>재표시에 쓰는 방문자 참조까지 해제하여 다음 방문자에게 이전 내용이 남지 않게 한다.</summary>
         [Button] public void Clear()
         {
             boundNpc = null;

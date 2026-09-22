@@ -9,6 +9,7 @@ using UnityEngine.InputSystem;
 
 namespace SheIsNotHuman.CubeScreen
 {
+    /// <summary>화면 전환과 면별 UI 입력이 공유하는 면 식별자다. 기존 직렬화 값의 순서를 유지한다.</summary>
     public enum CubeFace
     {
         Front,
@@ -22,6 +23,7 @@ namespace SheIsNotHuman.CubeScreen
     /// <summary>
     /// 뷰어를 육면체의 각 화면으로 회전·이동한다.
     /// 공개 전환 메서드는 공통 UI 버튼에서도 호출한다.
+    /// 면별 캡처 방식의 컨트롤러이며 표시 카메라와 UI 이벤트 카메라의 화각을 함께 맞춘다.
     /// </summary>
     [HideMonoScript]
     public sealed class CubeScreenController : MonoBehaviour
@@ -91,10 +93,12 @@ namespace SheIsNotHuman.CubeScreen
         private bool _isDragging;
 #endif
 
+        /// <summary>회전·위치·화각을 묶은 시퀀스가 완료될 때까지 입력을 차단하는 기준이다.</summary>
         [ShowInInspector, ReadOnly, HideInEditorMode]
         [FoldoutGroup("런타임 상태"), LabelText("회전 중")]
         public bool IsTurning => _turnSequence != null;
 
+        /// <summary>전환 시작 때 목표 면을 나타내므로 UI 입력은 CanReceiveInput으로 판정한다.</summary>
         [ShowInInspector, ReadOnly, HideInEditorMode]
         [FoldoutGroup("런타임 상태"), LabelText("현재 면")]
         public CubeFace CurrentFace => _verticalView switch
@@ -274,6 +278,7 @@ namespace SheIsNotHuman.CubeScreen
             float destinationFieldOfView)
         {
             // 회전, 위치, 화각을 하나의 DOTween 시퀀스로 맞춘다.
+            // 취소 시에도 목표 자세를 적용할 수 있도록 트윈보다 먼저 목표를 저장한다.
             _targetRotation = destination;
             _targetPosition = destinationPosition;
             _targetFieldOfView = destinationFieldOfView;

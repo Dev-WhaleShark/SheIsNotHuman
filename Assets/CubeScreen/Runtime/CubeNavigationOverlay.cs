@@ -14,6 +14,7 @@ namespace SheIsNotHuman.CubeScreen
     /// <summary>
     /// 포인터가 화면 가장자리에 접근하면 공통 방향 버튼을 표시한다.
     /// 버튼 활성 여부는 컨트롤러의 현재 화면 규칙을 따른다.
+    /// 두 컨트롤러가 모두 연결되어 있으면 단일 원근 카메라 방식이 표시와 클릭 처리에서 우선한다.
     /// </summary>
     [DisallowMultipleComponent]
     [HideMonoScript]
@@ -105,6 +106,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void OnDisable()
         {
+            // 숨겨진 UI의 클릭 구독과 진행 중 페이드를 모두 끊고 재활성화 시 처음부터 구성한다.
             _buttonSubscriptions?.Dispose();
             _buttonSubscriptions = null;
             KillFade(leftGroup);
@@ -128,7 +130,8 @@ namespace SheIsNotHuman.CubeScreen
 
             if (perspectiveController != null)
             {
-                // Detection is in physical pixels, independent of CanvasScaler resolution.
+                // 원근 카메라 방식은 CanvasScaler와 무관한 실제 픽셀로 감지한다.
+                // 카메라 뷰포트 밖 레터박스에서는 방향 버튼을 표시하지 않는다.
                 Rect viewport = perspectiveController.ViewCamera != null
                     ? perspectiveController.ViewCamera.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
                 bool inViewport = viewport.Contains(pointerPosition);
@@ -247,6 +250,7 @@ namespace SheIsNotHuman.CubeScreen
                 return;
             }
 
+            // 빠른 표시 전환에서도 이전 페이드가 새 목표의 alpha를 덮어쓰지 않게 중단한다.
             group.DOKill();
             group.interactable = visible;
             group.blocksRaycasts = visible;

@@ -2,6 +2,8 @@
 
 대상 씬은 `Assets/Scenes/PerspectiveCubeViewPrototype.unity`입니다. 기존 육면체 화면에서 Front는 NPC, Bottom은 대사와 문서 검사에 사용합니다.
 
+코드와 씬의 역할, 보존해야 할 연결, 유지보수 기준은 [프로젝트 구조](ProjectStructure.md)를 참고합니다.
+
 ## 범위와 규칙
 
 NPC 응대 → 대사 → 신분증·주문서 전달 → 두 문서 원본 동시 확대 → 플레이어 판정 → 반응·퇴장 → 다음 NPC를 구현합니다. 세 번째 NPC 뒤에는 완료 안내와 다시 시작을 제공합니다. 기본 화면에는 판정 버튼을 두지 않습니다.
