@@ -42,6 +42,42 @@ namespace SheIsNotHuman.CubeScreen
 
         public CubeFace CurrentFace { get; private set; } = CubeFace.Front;
         public bool IsTurning => _turnSequence != null;
+        internal event System.Action FaceInputStateChanged;
+        public Camera ViewCamera => viewCamera;
+        public bool CanTurnLeft => isActiveAndEnabled && !InputBlocked && !IsTurning && IsHorizontalFace(CurrentFace);
+        public bool CanTurnRight => CanTurnLeft;
+        public bool CanTurnUp => isActiveAndEnabled && !InputBlocked && !IsTurning
+            && (CurrentFace == CubeFace.Front || CurrentFace == CubeFace.Bottom);
+        public bool CanTurnDown => isActiveAndEnabled && !InputBlocked && !IsTurning
+            && (CurrentFace == CubeFace.Front || CurrentFace == CubeFace.Top);
+        private bool _inputBlocked;
+
+        [Sirenix.OdinInspector.ShowInInspector, Sirenix.OdinInspector.ReadOnly]
+        public bool InputBlocked
+        {
+            get => _inputBlocked;
+            set
+            {
+                _inputBlocked = value;
+#if ENABLE_INPUT_SYSTEM
+                if (value) _isDragging = false;
+#endif
+            }
+        }
+
+        /// <summary>Inspection flow can focus its two faces while player navigation is locked.</summary>
+        public void FocusFace(CubeFace face, bool animate)
+        {
+            if (!isActiveAndEnabled || viewCamera == null ||
+                (face != CubeFace.Front && face != CubeFace.Bottom)) return;
+
+            _horizontalIndex = 0;
+            CurrentFace = face;
+            BeginTurn(face == CubeFace.Bottom
+                ? _frontRotation * Quaternion.Euler(90f, 0f, 0f)
+                : _frontRotation, face == CubeFace.Bottom ? verticalFieldOfView : horizontalFieldOfView);
+            if (!animate) _turnSequence?.Complete(true);
+        }
 
         private void Awake()
         {
@@ -65,6 +101,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void OnDisable()
         {
+            FaceInputStateChanged?.Invoke();
 #if ENABLE_INPUT_SYSTEM
             _isDragging = false;
 #endif
@@ -83,6 +120,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void Update()
         {
+            if (InputBlocked) return;
 #if ENABLE_INPUT_SYSTEM
             ReadKeyboard();
             ReadMouseDrag();
@@ -91,7 +129,7 @@ namespace SheIsNotHuman.CubeScreen
 
         public void TurnLeft()
         {
-            if (!isActiveAndEnabled || IsTurning || !IsHorizontalFace(CurrentFace))
+            if (!CanTurnLeft)
             {
                 return;
             }
@@ -103,7 +141,7 @@ namespace SheIsNotHuman.CubeScreen
 
         public void TurnRight()
         {
-            if (!isActiveAndEnabled || IsTurning || !IsHorizontalFace(CurrentFace))
+            if (!CanTurnRight)
             {
                 return;
             }
@@ -115,7 +153,7 @@ namespace SheIsNotHuman.CubeScreen
 
         public void TurnUp()
         {
-            if (!isActiveAndEnabled || IsTurning)
+            if (!CanTurnUp)
             {
                 return;
             }
@@ -133,7 +171,7 @@ namespace SheIsNotHuman.CubeScreen
 
         public void TurnDown()
         {
-            if (!isActiveAndEnabled || IsTurning)
+            if (!CanTurnDown)
             {
                 return;
             }
@@ -158,6 +196,9 @@ namespace SheIsNotHuman.CubeScreen
 
         private void BeginTurn(Quaternion destination, float destinationFieldOfView)
         {
+#if ENABLE_INPUT_SYSTEM
+            _isDragging = false;
+#endif
             _targetRotation = destination;
             // Front에 붙인 Bottom의 중심으로 이동하고, 복귀 시 원위치로 돌아간다.
             _targetPosition = _frontPosition + (CurrentFace == CubeFace.Bottom
@@ -182,7 +223,10 @@ namespace SheIsNotHuman.CubeScreen
                     transform.localPosition = _targetPosition;
                     ApplyFieldOfView(destinationFieldOfView);
                     _turnSequence = null;
+                    FaceInputStateChanged?.Invoke();
                 });
+            // Synchronize keyboard/submit gates immediately, even inside an EventSystem callback.
+            FaceInputStateChanged?.Invoke();
         }
 
         private void ApplyFieldOfView(float fieldOfView)
@@ -244,7 +288,7 @@ namespace SheIsNotHuman.CubeScreen
                 return;
             }
 
-            if (mouse.rightButton.wasPressedThisFrame)
+            if (mouse.rightButton.wasPressedThisFrame && !IsTurning)
             {
                 _dragStart = mouse.position.ReadValue();
                 _isDragging = true;

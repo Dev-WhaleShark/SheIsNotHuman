@@ -28,8 +28,11 @@ namespace SheIsNotHuman.CubeScreen
         }
 
         [BoxGroup("필수 참조")]
-        [Required, SceneObjectsOnly, LabelText("화면 컨트롤러")]
+        [SceneObjectsOnly, LabelText("화면 컨트롤러")]
         [SerializeField] private CubeScreenController controller;
+
+        [BoxGroup("필수 참조"), SceneObjectsOnly]
+        [SerializeField] private PerspectiveCubeViewController perspectiveController;
 
         [BoxGroup("필수 참조")]
         [Required, SceneObjectsOnly, LabelText("Canvas 영역")]
@@ -69,7 +72,7 @@ namespace SheIsNotHuman.CubeScreen
 
         [BoxGroup("가장자리 표시")]
         [LabelText("감지 거리"), SuffixLabel("px")]
-        [SerializeField, Min(1f)] private float edgeRevealDistance = 44f;
+        [SerializeField, Min(1f)] private float edgeRevealDistance = 96f;
 
         [BoxGroup("가장자리 표시")]
         [LabelText("페이드 시간"), SuffixLabel("초")]
@@ -92,6 +95,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void OnEnable()
         {
+            Array.Clear(_visible, 0, _visible.Length);
             SubscribeButtonClicks();
             SetImmediate(leftGroup, false);
             SetImmediate(rightGroup, false);
@@ -111,7 +115,7 @@ namespace SheIsNotHuman.CubeScreen
 
         private void Update()
         {
-            if (controller == null || canvasRect == null || !TryGetPointerPosition(out Vector2 pointerPosition))
+            if ((controller == null && perspectiveController == null) || canvasRect == null || !TryGetPointerPosition(out Vector2 pointerPosition))
             {
                 HideAll();
                 return;
@@ -121,6 +125,19 @@ namespace SheIsNotHuman.CubeScreen
             Camera eventCamera = _canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay
                 ? _canvas.worldCamera
                 : null;
+
+            if (perspectiveController != null)
+            {
+                // Detection is in physical pixels, independent of CanvasScaler resolution.
+                Rect viewport = perspectiveController.ViewCamera != null
+                    ? perspectiveController.ViewCamera.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
+                bool inViewport = viewport.Contains(pointerPosition);
+                SetVisible(Direction.Left, inViewport && perspectiveController.CanTurnLeft && pointerPosition.x <= viewport.xMin + edgeRevealDistance);
+                SetVisible(Direction.Right, inViewport && perspectiveController.CanTurnRight && pointerPosition.x >= viewport.xMax - edgeRevealDistance);
+                SetVisible(Direction.Up, inViewport && perspectiveController.CanTurnUp && pointerPosition.y >= viewport.yMax - edgeRevealDistance);
+                SetVisible(Direction.Down, inViewport && perspectiveController.CanTurnDown && pointerPosition.y <= viewport.yMin + edgeRevealDistance);
+                return;
+            }
 
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     canvasRect,
@@ -150,7 +167,7 @@ namespace SheIsNotHuman.CubeScreen
         {
             _buttonSubscriptions?.Dispose();
 
-            if (controller == null)
+            if (controller == null && perspectiveController == null)
             {
                 _buttonSubscriptions = null;
                 return;
@@ -162,32 +179,56 @@ namespace SheIsNotHuman.CubeScreen
             if (leftButton != null)
             {
                 leftButton.OnClickAsObservable()
-                    .Subscribe(controller, static (_, target) => target.TurnLeft())
+                    .Subscribe(this, static (_, target) => target.Turn(Direction.Left))
                     .AddTo(ref subscriptions);
             }
 
             if (rightButton != null)
             {
                 rightButton.OnClickAsObservable()
-                    .Subscribe(controller, static (_, target) => target.TurnRight())
+                    .Subscribe(this, static (_, target) => target.Turn(Direction.Right))
                     .AddTo(ref subscriptions);
             }
 
             if (upButton != null)
             {
                 upButton.OnClickAsObservable()
-                    .Subscribe(controller, static (_, target) => target.TurnUp())
+                    .Subscribe(this, static (_, target) => target.Turn(Direction.Up))
                     .AddTo(ref subscriptions);
             }
 
             if (downButton != null)
             {
                 downButton.OnClickAsObservable()
-                    .Subscribe(controller, static (_, target) => target.TurnDown())
+                    .Subscribe(this, static (_, target) => target.Turn(Direction.Down))
                     .AddTo(ref subscriptions);
             }
 
             _buttonSubscriptions = subscriptions.Build();
+        }
+
+        private void Turn(Direction direction)
+        {
+            if (perspectiveController != null)
+            {
+                switch (direction)
+                {
+                    case Direction.Left: perspectiveController.TurnLeft(); break;
+                    case Direction.Right: perspectiveController.TurnRight(); break;
+                    case Direction.Up: perspectiveController.TurnUp(); break;
+                    case Direction.Down: perspectiveController.TurnDown(); break;
+                }
+            }
+            else if (controller != null)
+            {
+                switch (direction)
+                {
+                    case Direction.Left: controller.TurnLeft(); break;
+                    case Direction.Right: controller.TurnRight(); break;
+                    case Direction.Up: controller.TurnUp(); break;
+                    case Direction.Down: controller.TurnDown(); break;
+                }
+            }
         }
 
         private void SetVisible(Direction direction, bool visible)

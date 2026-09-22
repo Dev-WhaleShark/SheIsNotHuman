@@ -1,39 +1,47 @@
-# Project agent workflow
+# 프로젝트 에이전트 작업 절차
 
-## Default execution
+## 기본 실행 방식
 
-For implementation and bug-fix requests, use supervised parallel agents when independent work exists. This is the user's standing request for delegation. Answer explanation-only requests without starting implementation.
+구현 및 버그 수정 요청에서 독립적으로 진행할 수 있는 작업이 있으면 감독 기반 병렬 에이전트를 사용한다. 이는 위임에 관한 사용자의 지속적인 요청이다. 설명만 요청받았다면 구현을 시작하지 않고 답한다. 사용자가 특정 작업을 단일 에이전트로 진행하라고 요청하면 그 요청을 따른다.
 
-- The main agent owns user communication, scope, and the final report. Create one `supervisor` subagent to own decomposition, dispatch, dependencies, integration, and repair decisions.
-- Read `Docs/AgentWorkflow.md` and the relevant role instructions in `.codex/agents/`. If custom role selection is unavailable, pass the corresponding instructions explicitly when spawning a native agent.
-- The supervisor may spawn implementers and a verifier. Implementers and verifiers must not spawn additional supervisors or workers. Inherited project instructions do not override an agent's assigned role.
-- Respect the actual runtime limit. Start with main + supervisor + two workers (four active agents total). Reuse workers for follow-up work. Run verification after implementation; if a new verifier cannot be created, the main agent provides independent verification while the supervisor coordinates repairs. Never wait for capacity while keeping unnecessary workers active.
-- The main agent must do useful independent work while delegation runs, such as requirements analysis, preparing validation, or inspecting integration boundaries. Route worker changes through the supervisor.
-- For a small indivisible change, use one implementer and an independent review rather than inventing parallel tasks.
+- 메인 에이전트는 사용자와의 소통, 작업 범위, 최종 보고를 담당한다. 작업 분해, 배정, 의존 관계, 통합 및 수정 방향을 맡을 `supervisor` 하위 에이전트 한 명을 만든다.
+- `Docs/AgentWorkflow.md`와 `.codex/agents/`의 관련 역할 지침을 읽는다. 사용자 지정 역할을 선택할 수 없으면 기본 하위 에이전트를 만들 때 해당 지침을 명시적으로 전달한다.
+- 감독은 구현자와 검증자를 만들 수 있다. 구현자와 검증자는 감독이나 다른 작업자를 추가로 만들지 않는다. 상속된 프로젝트 지침보다 배정받은 역할이 우선한다.
+- 실제 런타임의 동시 실행 한도를 지킨다. 메인, 감독, 작업자 두 명으로 시작해 활성 에이전트가 총 네 명을 넘지 않도록 한다. 후속 작업에는 기존 작업자를 재사용한다. 구현 후 검증을 진행하며, 새 검증자를 만들 수 없다면 감독이 수정을 조율하는 동안 메인이 독립적으로 검증한다. 불필요한 작업자를 활성 상태로 둔 채 실행 여유를 기다리지 않는다.
+- 위임이 진행되는 동안 메인도 요구사항 분석, 검증 준비, 통합 경계 확인 등 독립적으로 유용한 일을 한다. 작업자의 변경 사항은 감독을 통해 조율한다.
+- 나눌 수 없는 작은 변경이라면 억지로 병렬 작업을 만들지 말고 구현자 한 명과 독립 검토를 사용한다.
 
-## Ownership and completion
+## 파일 소유권과 완료 기준
 
-- Before editing, inspect the worktree and record existing user changes. Preserve them. No automatic reset, cleanup, commit, push, or deployment.
-- Each task needs an ID, objective, file ownership, dependencies, acceptance criteria, and validation plan. Assign disjoint files where possible; shared interfaces must be agreed before parallel implementation.
-- Shared-directory agents see each other's changes immediately. Only one writer per file. Only the supervisor assigns or transfers ownership. Freeze implementation during integrated verification.
-- Worker completion means `implemented`, not `verified`. Integrate all required changes, then run relevant checks on the final combined state and review against acceptance criteria.
-- Failures follow reproduce -> diagnose -> scoped fix -> rerun failing checks and affected regression checks. Continue authorized repairs without asking for routine confirmation. After three attempts with the same failure signature, reassess assumptions and change approach; escalate only a concrete blocker that requires user input or external action.
-- Do not weaken tests, skip failures, or claim unexecuted checks passed. Record pre-existing failures separately. Report missing test coverage and unavailable tooling as unverified, not success.
-- Final report in Korean: delivered changes, tests actually run and their results, repaired issues, remaining blockers or unverified behavior.
+- 편집 전에 작업 트리와 기존 사용자 변경 사항을 확인하고 기록한다. 기존 변경을 보존한다. 자동으로 초기화, 정리, 커밋, 푸시 또는 배포하지 않는다.
+- 각 작업에 ID, 목표, 담당 파일, 의존 관계, 완료 기준, 검증 계획을 지정한다. 가능하면 파일 담당 범위를 겹치지 않게 하고, 공유 인터페이스는 병렬 구현 전에 합의한다.
+- 같은 디렉터리를 사용하는 에이전트는 서로의 변경 사항을 즉시 볼 수 있다. 한 파일에는 작성자 한 명만 둔다. 담당 파일의 배정과 이전은 감독만 결정한다. 통합 검증 중에는 구현 변경을 멈춘다.
+- 작업자의 완료 보고는 `implemented`를 뜻하며 `verified`를 뜻하지 않는다. 필요한 변경을 모두 통합한 뒤 최종 상태에서 관련 검사를 실행하고 완료 기준과 대조한다.
+- 실패가 나면 재현 → 진단 → 범위를 정한 수정 → 실패한 검사와 영향받는 회귀 검사 재실행 순서로 처리한다. 통상적인 수정에는 다시 허락을 구하지 않는다. 같은 실패 양상이 세 번 반복되면 전제를 재검토하고 접근 방식을 바꾼다. 사용자 입력이나 외부 조치가 필요한 구체적인 장애가 있을 때만 상위에 알린다.
+- 테스트를 약화하거나 실패를 건너뛰거나 실행하지 않은 검사가 통과했다고 주장하지 않는다. 기존 실패는 별도로 기록한다. 테스트 범위가 부족하거나 도구를 사용할 수 없다면 성공이 아닌 미검증으로 보고한다.
+- 최종 보고는 한국어로 작성한다. 제공한 변경, 실제 실행한 검사와 결과, 수정한 문제, 남은 장애 또는 미검증 동작을 포함한다.
 
-## Unity coordination
+## Unity 작업 조율
 
-- Use the version in `ProjectSettings/ProjectVersion.txt`. Read `Docs/CODEX_HANDOFF.md` and `Docs/UnifiedFaceViewDesign.md` for relevant CubeScreen work; verify historical claims and the target scene against current files and the user's request.
-- The supervisor assigns one Unity Editor owner at a time. Serialize scene/prefab edits, asset imports, package changes, Play Mode transitions, and test/build runs against the same Editor/project. Pause relevant code writes during compilation or tests.
-- Before Editor actions, use the applicable Unity skill and confirm the active project/instance. Never start a second Editor on the same project or discard unsaved scenes.
-- Keep Unity asset `.meta` files paired and preserve GUIDs. Do not edit generated `Library/`, `Temp/`, `obj/`, or generated solution/project files.
-- For runtime changes, check compilation and relevant EditMode/PlayMode behavior. For visual/input changes, also inspect the actual scene and capture relevant evidence. Zero discovered tests is a coverage gap.
-- `Assets/Scenes/TestScene.unity` and its `.meta` are outside CubeScreen work unless the user explicitly includes them.
+- Unity 버전은 `ProjectSettings/ProjectVersion.txt`를 기준으로 한다. CubeScreen 관련 작업에서는 `Docs/CODEX_HANDOFF.md`와 `Docs/UnifiedFaceViewDesign.md`를 읽고, 과거 기록과 대상 씬을 현재 파일 및 사용자 요청과 대조한다.
+- 감독은 Unity Editor 담당자를 한 번에 한 명만 지정한다. 같은 Editor/프로젝트에 대한 씬·프리팹 편집, 에셋 가져오기, 패키지 변경, Play Mode 전환, 테스트·빌드 실행은 순서대로 진행한다. 컴파일이나 테스트 중에는 관련 코드의 쓰기 작업을 멈춘다.
+- Editor 작업 전 해당 Unity 스킬을 사용하고 활성 프로젝트와 인스턴스를 확인한다. 같은 프로젝트에서 두 번째 Editor를 열거나 저장되지 않은 씬을 버리지 않는다.
+- Unity 에셋과 `.meta` 파일을 함께 관리하고 GUID를 보존한다. 생성된 `Library/`, `Temp/`, `obj/` 및 솔루션·프로젝트 파일을 편집하지 않는다.
+- 런타임 변경은 컴파일과 관련 EditMode/PlayMode 동작을 확인한다. 화면이나 입력 변경은 실제 씬도 확인하고 관련 증거를 남긴다. 발견된 테스트가 0개라면 검증 범위의 공백으로 기록한다.
+- 사용자가 명시적으로 포함하지 않은 한 `Assets/Scenes/TestScene.unity`와 해당 `.meta`는 CubeScreen 작업 범위에서 제외한다.
 
-## Coordination backend
+## 프로젝트 에셋 사용 기준
 
-- In an Orca-managed session, prefer Orca orchestration after loading the installed orchestration skill and its version-matched CLI guide and confirming runtime/context. The supervisor owns the Run and dispatches; the main agent relays CLI calls only if needed for terminal authority. Native-only sessions use Codex subagents. Announce the chosen backend before dispatching.
-- Orca CLI access may require approved execution outside the Windows sandbox. A sandbox command-not-found result is not proof Orca is uninstalled. Retry the same selected executable with proper approval when environment evidence supports that diagnosis; never switch to an unverified binary.
-- Orca Task/Dispatch state is the sole live task-state authority in Orca mode. A native supervisor can coordinate Orca workers, but workers must be real Orca Dispatches. A dispatched implementer/verifier must follow its live worker preamble and must not spawn a supervisor because it inherited these project rules.
-- This setup is not a background service and does not imply work continues after the session is stopped. Never present native agents as Orca workers.
-- Do not silently switch an active Orca run to native coordination. Reconcile workers, ownership, and completed changes before any backend transition.
+- 텍스트 표시, 타이핑, 글자별 효과 등 텍스트 애니메이션에는 **Text Animator for Unity**를 사용한다.
+- UI 전환과 그 밖의 트위닝 애니메이션에는 **DOTween Pro**를 사용한다. 대상, 종료 처리 및 중복 실행을 고려한다.
+- Rx, 반응형 프로그래밍, 비동기 프로그래밍에는 **R3**를 적극 활용한다. 이벤트나 비동기 결과를 스트림으로 다룰 때 구독 수명과 취소 처리를 함께 설계한다.
+- 그 밖의 컴포넌트, Inspector에서 제어하거나 Editor에서 테스트할 수 있는 기능, 에디터 스크립트를 이용한 개발자 기능을 만들 때는 **Odin Inspector and Serializer**를 활용한다.
+- 적용 전 현재 프로젝트에서 각 에셋의 설치 상태와 사용 가능한 API를 확인한다. 기존 기능을 수정할 때도 용도에 맞는 에셋 사용 방식을 유지한다.
+
+## 조율 도구
+
+- Orca 관리 세션에서는 설치된 `orchestration` 스킬과 버전에 맞는 CLI 지침을 읽고 런타임과 컨텍스트를 확인한 뒤 Orca orchestration을 우선 사용한다. 감독이 Run과 작업 배정을 담당하며, 터미널 권한 때문에 필요할 때만 메인이 CLI 호출을 중계한다. Orca를 쓰지 않는 세션에서는 Codex 하위 에이전트를 사용한다. 작업 배정 전에 선택한 방식을 알린다.
+- Windows 샌드박스에서는 Orca CLI 실행에 승인된 외부 실행이 필요할 수 있다. 샌드박스에서 명령을 찾지 못했다고 Orca가 설치되지 않았다고 단정하지 않는다. 환경 근거가 있다면 적절한 승인 절차를 거쳐 선택한 실행 파일로 같은 명령을 다시 시도한다. 확인하지 않은 다른 실행 파일로 바꾸지 않는다.
+- Orca 모드의 실시간 작업 상태는 Orca Task/Dispatch를 유일한 기준으로 삼는다. 기본 하위 에이전트인 감독이 Orca 작업자를 조율할 수 있지만 작업자는 실제 Orca Dispatch여야 한다. 배정받은 구현자와 검증자는 실시간 작업자 지침을 따르며, 상속된 프로젝트 규칙을 이유로 감독을 새로 만들지 않는다.
+- 이 설정은 백그라운드 서비스가 아니며 세션이 멈춘 뒤 작업이 계속된다는 뜻도 아니다. 기본 하위 에이전트를 Orca 작업자로 표현하지 않는다.
+- 진행 중인 Orca Run을 알리지 않고 기본 하위 에이전트 방식으로 전환하지 않는다. 방식을 바꾸기 전에 작업자, 파일 소유권, 완료된 변경 사항을 대조한다.
