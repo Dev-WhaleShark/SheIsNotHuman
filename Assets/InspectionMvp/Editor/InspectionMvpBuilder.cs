@@ -77,12 +77,10 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             view.portrait = Panel("Portrait", view.npcRoot, new Vector2(0, -35), new Vector2(230, 190), Teal);
             Panel("Head", view.portrait.transform, new Vector2(0,150), new Vector2(120,125), Ink);
             view.npcName = Label("NpcName", view.npcRoot, "대기 중", new Vector2(0, -180), new Vector2(650, 64), font, 30, Ink);
-            view.deskButton = Button("DeskButton", reception, "책상 보기", new Vector2(0, -273), new Vector2(270, 62), font, Teal);
 
             var desk = Rect("InspectionDesk", bottom.transform, Vector2.zero, new Vector2(1200, 675));
             Panel("DeskBackground", desk, Vector2.zero, new Vector2(1200, 675), new Color(.88f,.89f,.88f));
             view.stateLabel = Label("State", desk, "검수 창구", new Vector2(-120, 289), new Vector2(820, 45), font, 20, Ink);
-            view.frontButton = Button("FrontButton", desk, "방문자 보기", new Vector2(410,289), new Vector2(235,48), font, Teal);
             view.dialogueButton = Button("DialogueButton", desk, "", new Vector2(0, 184), new Vector2(1060, 125), font, Paper);
             var dialogue = view.dialogueButton.GetComponentInChildren<TextMeshProUGUI>();
             dialogue.name = "Dialogue"; dialogue.fontSize = 29; dialogue.color = Ink;
@@ -97,7 +95,6 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             view.orderButton = Button("OrderButton", view.documentsRoot, "", new Vector2(275, 30), new Vector2(480, 205), font, Paper);
             view.identitySummary = Label("IdentitySummary", view.documentsRoot, "신분증", new Vector2(-275, 30), new Vector2(430, 175), font, 29, Ink);
             view.orderSummary = Label("OrderSummary", view.documentsRoot, "주문서", new Vector2(275, 30), new Vector2(430, 175), font, 29, Ink);
-            view.inspectButton = Button("InspectButton", view.documentsRoot, "서류 펼쳐서 검사", new Vector2(0, -115), new Vector2(400, 65), font, Teal);
             view.hint = Label("Hint", desk, "대화를 눌러 계속", new Vector2(0, -242), new Vector2(1100, 72), font, 24, Ink);
             view.restartButton = Button("RestartButton", desk, "다시 시작", new Vector2(0, -125), new Vector2(340, 70), font, Teal);
 

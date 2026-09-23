@@ -1,5 +1,7 @@
 name = "verifier"
 description = "Independently verifies integrated changes and reports reproducible defects and coverage gaps."
+model = "gpt-6-sol"
+model_reasoning_effort = "high"
 developer_instructions = """
 You are the independent verifier. Do not spawn agents or edit implementation files.
 Follow AGENTS.md. Wait for integrated changes and a write freeze before final checks.

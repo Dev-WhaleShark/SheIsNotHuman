@@ -19,7 +19,7 @@ namespace SheIsNotHuman.InspectionMvp
         [Required] public UnityEngine.UI.Image portrait, identityPortrait;
         [Required] public TMP_Text npcName, hint, stateLabel, identitySummary, orderSummary, identityDetail, orderDetail, resultStamp;
         [Required] public TypewriterComponent dialogueWriter;
-        [Required] public UnityEngine.UI.Button dialogueButton, inspectButton, identityButton, orderButton, closeButton, passButton, nonPassButton, restartButton, deskButton, frontButton;
+        [Required] public UnityEngine.UI.Button dialogueButton, identityButton, orderButton, closeButton, passButton, nonPassButton, restartButton;
         [Title("Independent document views"), Required] public IdentityDocumentView identityDocument, expandedIdentityDocument;
         [Required] public OrderDocumentView orderDocument, expandedOrderDocument;
         [Title("Desk items")] public DeskInspectableItem[] deskItems = new DeskInspectableItem[0];
@@ -77,14 +77,11 @@ namespace SheIsNotHuman.InspectionMvp
                 dialogueOrigin = ((RectTransform)dialogueButton.transform).anchoredPosition;
             }
             dialogueButton.onClick.AddListener(Advance);
-            inspectButton.onClick.AddListener(Open);
             closeButton.onClick.AddListener(Close);
             if (dummyCloseButton != null && dummyCloseButton != closeButton) dummyCloseButton.onClick.AddListener(Close);
             passButton.onClick.AddListener(Pass);
             nonPassButton.onClick.AddListener(NonPass);
             restartButton.onClick.AddListener(RestartFlow);
-            deskButton.onClick.AddListener(FocusDesk);
-            frontButton.onClick.AddListener(FocusFront);
             initialized = true;
             ResetPresentation();
         }
@@ -103,8 +100,6 @@ namespace SheIsNotHuman.InspectionMvp
         private void Pass() { if (OnFace(CubeFace.Bottom) && Stable && modalOpen && !dummyMode) flow.Decide(InspectionDecision.Pass); }
         private void NonPass() { if (OnFace(CubeFace.Bottom) && Stable && modalOpen && !dummyMode) flow.Decide(InspectionDecision.NonPass); }
         private void RestartFlow() { if (OnFace(CubeFace.Bottom) && flow != null) flow.Restart(); }
-        private void FocusDesk() { if (OnFace(CubeFace.Front) && Stable && !modalOpen && !DeskInspectableItem.AnyPointerInteraction) navigation.FocusFace(CubeFace.Bottom, flow.animateTransitions); }
-        private void FocusFront() { if (OnFace(CubeFace.Bottom) && Stable && !modalOpen && !DeskInspectableItem.AnyPointerInteraction) navigation.FocusFace(CubeFace.Front, flow.animateTransitions); }
 
         /// <summary>현재 면·상태·포인터 점유를 기준으로 물품 입력을 허용한다. 소품은 대화/완료 단계에도 열 수 있다.</summary>
         public bool CanInteractWith(DeskInspectableItem item) => item != null && initialized && isActiveAndEnabled && Stable && !modalOpen
@@ -153,13 +148,10 @@ namespace SheIsNotHuman.InspectionMvp
             bool stable = Stable && !DeskInspectableItem.AnyPointerInteraction && OnFace(CubeFace.Bottom);
             bool inspecting = state == InspectionState.Inspecting;
             dialogueButton.interactable = stable && !modalOpen && state == InspectionState.Dialogue;
-            inspectButton.interactable = stable && !modalOpen && inspecting;
-            identityButton.interactable = orderButton.interactable = inspectButton.interactable;
+            identityButton.interactable = orderButton.interactable = stable && !modalOpen && inspecting;
             closeButton.interactable = stable && modalOpen && (inspecting || dummyMode);
             if (dummyCloseButton != null && dummyCloseButton != closeButton) dummyCloseButton.interactable = stable && modalOpen && dummyMode;
             passButton.interactable = nonPassButton.interactable = stable && modalOpen && inspecting && !dummyMode;
-            deskButton.interactable = OnFace(CubeFace.Front) && Stable && !DeskInspectableItem.AnyPointerInteraction && !modalOpen && (inspecting || state == InspectionState.Dialogue);
-            frontButton.interactable = stable && !modalOpen && (inspecting || state == InspectionState.Dialogue);
             restartButton.interactable = stable && !modalOpen;
             if (navigation != null)
                 navigation.InputBlocked = modalOpen || modalBusy || motionBusy || DeskInspectableItem.AnyPointerInteraction
@@ -467,30 +459,19 @@ namespace SheIsNotHuman.InspectionMvp
             nonPassButton.gameObject.SetActive(!dummyMode);
             for (int i = 0; i < focused.Count; i++)
             {
-                Vector2 size = dummyMode ? focused[i].Rect.rect.size : new Vector2(460, 380);
+                Vector2 size = dummyMode ? focused[i].Rect.rect.size :
+                    i == 0 ? new Vector2(460, 280) : new Vector2(310, 480);
+                Vector2 position = dummyMode ? new Vector2(0, 20) :
+                    i == 0 ? new Vector2(-230, 30) : new Vector2(235, 45);
                 float itemScale = dummyMode ? Mathf.Min(720f / Mathf.Max(1, size.x), 330f / Mathf.Max(1, size.y)) : 1;
-                focused[i].Prepare(focusItemsRoot, dummyMode ? new Vector2(0, 20) : new Vector2(i == 0 ? -250 : 250, 20), size, itemScale);
+                focused[i].Prepare(focusItemsRoot, position, size, itemScale);
             }
             if (!dummyMode)
             {
                 identityDocument.SetExpanded(true);
                 orderDocument.SetExpanded(true);
-                FormatFocusedDocument(identityDocument.content, identityDocument.portrait != null);
-                FormatFocusedDocument(orderDocument.content);
             }
             focusControls.SetAsLastSibling();
-        }
-
-        private static void FormatFocusedDocument(TMP_Text text, bool reservePortrait = false)
-        {
-            var rect = text.rectTransform;
-            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-            rect.pivot = Vector2.one * .5f;
-            rect.offsetMin = new Vector2(24, 20);
-            rect.offsetMax = new Vector2(reservePortrait ? -150 : -24, -20);
-            text.enableAutoSizing = true; text.fontSize = 26; text.fontSizeMin = 18; text.fontSizeMax = 26;
-            text.alignment = TextAlignmentOptions.TopLeft;
-            text.margin = Vector4.zero;
         }
 
         // 닫기뿐 아니라 취소·NPC 교체 경로도 같은 복원을 사용해 원본이 확대 계층에 남지 않게 한다.
@@ -557,7 +538,7 @@ namespace SheIsNotHuman.InspectionMvp
             {
                 if (Rect == null) return;
                 if (identity != null) identity.SetExpanded(expanded);
-                if (order != null) order.expanded = expanded;
+                if (order != null) order.SetExpanded(expanded);
                 foreach (var saved in rects) saved.Restore();
                 foreach (var saved in texts) saved.Restore();
             }
@@ -612,12 +593,10 @@ namespace SheIsNotHuman.InspectionMvp
 
         private void Unwire()
         {
-            dialogueButton.onClick.RemoveListener(Advance); inspectButton.onClick.RemoveListener(Open);
+            dialogueButton.onClick.RemoveListener(Advance);
             if (dummyCloseButton != null && dummyCloseButton != closeButton) dummyCloseButton.onClick.RemoveListener(Close);
             closeButton.onClick.RemoveListener(Close); passButton.onClick.RemoveListener(Pass);
             nonPassButton.onClick.RemoveListener(NonPass); restartButton.onClick.RemoveListener(RestartFlow);
-            deskButton.onClick.RemoveListener(FocusDesk);
-            frontButton.onClick.RemoveListener(FocusFront);
         }
         private void ClearNpcData()
         {

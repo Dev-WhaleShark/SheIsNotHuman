@@ -9,9 +9,13 @@ namespace SheIsNotHuman.InspectionMvp
     public sealed class IdentityDocumentView : MonoBehaviour
     {
         [Required] public TMP_Text content;
+        public TMP_Text displayNameText;
+        public TMP_Text customerCodeText;
+        public TMP_Text footerText;
         public UnityEngine.UI.Image portrait;
         public bool expanded;
         private InspectionNpcData boundNpc;
+        private bool HasAuthoredLayout => displayNameText != null || customerCodeText != null || footerText != null;
 
         /// <summary>현재 방문자 참조를 유지한 채 같은 문서 인스턴스의 표시만 다시 구성한다.</summary>
         public void SetExpanded(bool value) { expanded = value; Bind(boundNpc); }
@@ -22,13 +26,19 @@ namespace SheIsNotHuman.InspectionMvp
             boundNpc = npc;
             if (npc == null || npc.identity == null) { Clear(); return; }
             var data = npc.identity;
-            content.text = expanded
+            if (HasAuthoredLayout)
+            {
+                if (displayNameText != null) displayNameText.text = data.displayName;
+                if (customerCodeText != null) customerCodeText.text = data.customerCode;
+                if (footerText != null) footerText.text = npc.npcId;
+            }
+            else if (content != null) content.text = expanded
                 ? "신분증\n\n이름  " + data.displayName + "\n\n고객 코드\n" + data.customerCode
                 : "신분증\n" + data.displayName + "\n" + data.customerCode;
             if (portrait != null)
             {
                 portrait.color = npc.portraitColor;
-                portrait.gameObject.SetActive(expanded);
+                portrait.gameObject.SetActive(HasAuthoredLayout || expanded);
             }
         }
 
@@ -36,7 +46,10 @@ namespace SheIsNotHuman.InspectionMvp
         [Button] public void Clear()
         {
             boundNpc = null;
-            if (content != null) content.text = string.Empty;
+            if (!HasAuthoredLayout && content != null) content.text = string.Empty;
+            if (displayNameText != null) displayNameText.text = string.Empty;
+            if (customerCodeText != null) customerCodeText.text = string.Empty;
+            if (footerText != null) footerText.text = string.Empty;
             if (portrait != null)
             {
                 portrait.color = Color.clear;

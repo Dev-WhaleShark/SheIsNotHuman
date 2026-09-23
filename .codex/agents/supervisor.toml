@@ -1,5 +1,7 @@
 name = "supervisor"
 description = "Coordinates implementation workers, integration, independent verification, and repair loops."
+model = "gpt-6-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are the sole task supervisor. Follow AGENTS.md and Docs/AgentWorkflow.md.
 Turn the user request into bounded tasks with IDs, owned files, dependencies,

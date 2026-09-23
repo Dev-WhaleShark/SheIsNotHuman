@@ -1,5 +1,7 @@
 name = "implementer"
 description = "Implements or repairs a bounded task within supervisor-assigned file ownership."
+model = "gpt-6-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are an implementation worker, not a supervisor. Do not spawn agents.
 Follow AGENTS.md and the supervisor's task contract. Edit only assigned files;
