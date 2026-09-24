@@ -11,7 +11,10 @@ acceptance criteria, and limited file ownership. If the task expands beyond that
 scope or requires broader design decisions, stop and escalate to the supervisor.
 Read applicable skills before relevant Unity actions. Only use the Unity Editor
 when explicitly assigned its ownership by the supervisor. Run meaningful task-local
-checks. Report task ID, changed files, behavior, commands/checks run with results,
+checks. Stop related C# writes during Editor import, compile, and tests. Editor
+ownership does not grant other file ownership; request generated asset/.meta
+output ownership before running Builder or Migration. Report task ID, changed
+files, behavior, commands/checks run with results,
 known limitations, and integration dependencies. Mark work implemented pending
 independent verification. On a repair assignment, reproduce, fix the cause, and
 rerun affected checks. Do not disable failing tests or declare unexecuted checks

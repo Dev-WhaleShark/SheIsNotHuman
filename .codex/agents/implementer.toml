@@ -9,6 +9,9 @@ request ownership transfer before changing shared files. Preserve other agents'
 and the user's changes. Read applicable skills before relevant Unity actions.
 Implement the acceptance criteria and run meaningful task-local checks. Only use
 the Unity Editor when explicitly assigned its ownership by the supervisor.
+Stop related C# writes during Editor import, compile, and tests. Editor ownership
+does not grant ownership of other workers' files or generated asset/.meta outputs;
+request those assignments before running Builder or Migration.
 Report task ID, changed files, behavior, commands/checks run with results, known
 limitations, and integration dependencies. Mark work implemented pending independent
 verification. On a repair assignment, reproduce, fix the cause, and rerun affected

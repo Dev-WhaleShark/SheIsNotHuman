@@ -16,9 +16,9 @@
 | 작업 | 역할 또는 모델 / 추론 수준 |
 | --- | --- |
 | 탐색, 문서, 간단 구현 | `implementer_lite`: `gpt-6-luna` / `high` |
-| 일반 구현, 감독 | `gpt-6-sol` / `medium` |
-| 복잡한 버그, 독립 검증 | `gpt-6-sol` / `high` |
-| 최상위 추론이 필요한 예외 | 근거를 기록하고 `gpt-6-astra` / `low` |
+| 일반 구현 | `gpt-6-sol` / `medium` |
+| 감독, 복잡한 버그, 독립 검증 | `gpt-6-sol` / `high` |
+| 최상위 추론이 필요한 예외 | 근거를 기록하고 `gpt-6-astra` / `high` |
 
 런타임이 요청 모델을 지원하지 않으면 확인된 사용 가능 모델 중 가장 가까운 낮은 등급으로 대체하고 요청값, 실제값, 이유를 기록한다.
 
@@ -42,6 +42,17 @@ Orca `worker-start`에서 `--effort`를 쓰려면 `--model`도 지정해야 하�
 검증 실패 시 `verifying -> repairing -> implemented -> verifying`로 돌아간다.
 `blocked`는 실패 원인, 이미 시도한 대안, 필요한 외부 조치와 함께 기록한다.
 
+## 이 프로젝트의 권장 작업 경계
+
+독립 구현은 메인·감독·작업자 2명으로 시작한다. Editor 작업과 최종 독립 검증 단계에서는 작업자 슬롯을 재배치하되, Editor 담당자는 한 번에 한 명만 둔다. 아래 경계는 현재 파일을 기준으로 한 배정 예시이며 실제 변경 파일의 작성자는 작업 계약에서 확정한다.
+
+| 작업 경계 | 현재 파일과 조율 조건 |
+| --- | --- |
+| 검사 데이터·흐름·규칙 | `Assets/InspectionMvp/Runtime/InspectionData.cs`, `InspectionNpcData.cs`, `InspectionFlowController.cs`의 데이터와 판정 계약. 메뉴 규칙 검사는 `Assets/InspectionMvp/Tests/Editor/InspectionRuleChecks.cs`에 있으며 NUnit 발견 수와 별도로 센다. |
+| 화면·입력 결합 | `InspectionMvpView.cs`, `DeskInspectableItem.cs`와 `Assets/CubeScreen/Runtime/PerspectiveCubeViewController.cs`, `DistortionCorrectedGraphicRaycaster.cs`, `LensDistortionCoordinates.cs`는 같은 상호작용을 이룬다. 병렬 수정 전 좌표 변환, 현재 면, 확대 중 입력 잠금, 취소 API 계약을 합의한다. |
+| 씬 구성·마이그레이션 | `Assets/InspectionMvp/Editor/InspectionMvpBuilder.cs`, `InspectionDeskMigration.cs`, `InspectionNavigationMigration.cs`, `InspectionDocumentLayout.cs`의 코드 소유권과 실제 씬·프리팹·에셋 및 `.meta` 출력 소유권을 각각 지정한다. 실행은 단일 Editor 담당자가 맡는다. |
+| 최종 검증 | 모든 관련 소스 작성자의 쓰기를 동결한 최신 통합 상태에서 독립 검증자가 컴파일, 관련 검사, 실제 씬 동작을 확인한다. |
+
 ## 작업 기록
 
 감독은 각 실행에 고유한 이름을 부여하고 `tmp/agent-runs/<run-id>/tasks.md`에 기록한다. `tmp/`는 Git 제외 대상이며 자동 삭제하지 않는다. 하나의 감독만 기록을 수정한다. Orca 모드에서는 Orca 작업 상태가 기준이며 이 파일은 결과 내보내기 용도로만 사용한다.
@@ -63,6 +74,7 @@ Unity Editor 담당자: 없음 또는 <agent>
 - 검사한 revision 또는 변경 파일 해시:
 - 결과: passed / failed / blocked / not-run
 - 발견·실행·통과·실패·건너뛴 테스트 수:
+- 메뉴 규칙 검사 결과 / 발견·실행한 NUnit 테스트 수 (별도 기록):
 - 로그 / 결과 파일:
 
 ## 수정 기록
@@ -70,6 +82,7 @@ Unity Editor 담당자: 없음 또는 <agent>
 
 ## 인계
 - 현재 작업과 파일 소유자:
+- Unity 프로젝트 / Editor 인스턴스 / 대상 씬 / dirty·저장 / Play / 컴파일 / 출력 에셋·.meta / 다음 Editor 담당자:
 - 완료 항목 / 남은 항목 / 차단 사유:
 ```
 
@@ -77,10 +90,14 @@ Unity Editor 담당자: 없음 또는 <agent>
 
 현재 프로젝트 버전은 `ProjectSettings/ProjectVersion.txt`가 기준이다. 설정 당시 Unity 6000.5.4f1이며 `Packages/manifest.json`에 Test Framework 1.7.0이 있다. 패키지 설치와 프로젝트 테스트 존재 여부는 별개다.
 
+Unity 작업은 소스 작성과 Editor 실행을 구분해 배정한다. 감독은 C# 및 관련 `.meta`의 작성자를 파일별로 한 명씩 지정하고, 씬·프리팹 편집, AssetDatabase 작업, 에셋 가져오기, 컴파일, Play Mode, Unity 테스트·빌드는 한 번에 한 명의 Editor 담당자에게 맡긴다. Editor 담당 권한은 다른 작업자의 파일 소유권을 넘겨받는 뜻이 아니다. Builder·Migration·Editor 스크립트가 간접 생성하거나 저장하는 씬·프리팹·에셋과 각각의 `.meta`도 실행 전에 출력 파일 소유자와 범위를 작업 계약에 적는다.
+
+Editor 가져오기·컴파일·테스트를 시작하기 전에 모든 작성자의 관련 소스 쓰기를 멈추고 감독이 최신 파일 상태를 기록한다. 가져오기·컴파일·테스트가 진행되는 동안 관련 C#을 수정하지 않는다. 수정이 필요하면 Editor 검증을 중단하고 파일 소유자에게 돌려보낸 뒤 다시 쓰기를 동결하고 영향을 받은 검사를 재실행한다. Editor 인계에는 활성 프로젝트와 인스턴스, 대상 씬, 씬·프리팹의 dirty/저장 상태, Play Mode 상태, 컴파일 상태, 생성·변경 출력물과 `.meta`, 다음 담당자를 기록한다.
+
 - 문서/에이전트 설정 변경: 설정 파싱, 파일 참조, 역할 간 충돌, 위임/결과 회수 확인. 게임 동작 변경이 없으면 Unity 실행을 불필요하게 요구하지 않는다.
 - C# 런타임/Editor 변경: 실제 Unity 컴파일 결과와 관련 테스트 확인. 생성된 csproj의 빌드 결과만으로 Unity 검증을 대체하지 않는다.
-- 시각/입력/씬 변경: 관련 씬의 실제 동작과 화면, Console 오류/경고를 확인한다. CubeScreen 관련 작업은 기존 인계 문서의 검증 요구사항도 따른다. 최신 `Docs/UnifiedFaceViewDesign.md`와 실제 파일을 함께 확인하여 과거 인계서의 씬 이름만 고정하지 않는다.
-- 테스트가 없다면 0개 통과를 성공 근거로 삼지 않는다. 변경 위험에 맞는 재현 시나리오 또는 필요한 회귀 테스트를 준비한다.
+- 시각/입력/씬 변경: 관련 씬의 실제 동작과 화면, Console 오류/경고를 확인한다. CubeScreen 관련 작업은 현행 `Docs/ProjectStructure.md`, `Docs/InspectionMvp.md`와 실제 대상 씬 파일을 대조한다. 현재 MVP 씬은 `Assets/Scenes/PerspectiveCubeViewPrototype.unity`이지만 작업 대상은 요청과 현재 파일에서 확인한다.
+- `InspectionRuleChecks`의 메뉴 실행 규칙 검사 수와 Unity Test Framework에서 발견·실행한 NUnit 테스트 수를 별도 항목으로 기록한다. 테스트가 0개 발견되면 0개 통과를 성공 근거로 삼지 않는다. 변경 위험에 맞는 재현 시나리오 또는 필요한 회귀 테스트를 준비한다.
 - Editor가 열려 있으면 적용되는 Unity 스킬을 통해 연결된 올바른 프로젝트를 확인한다. 같은 프로젝트로 두 번째 Editor를 실행하지 않는다.
 - 최종 검증은 코드 쓰기가 멈춘 상태에서 수행하고, 검증 후 관련 파일이 바뀌면 영향받는 검사를 다시 한다.
 

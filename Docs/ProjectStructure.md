@@ -4,7 +4,7 @@
 
 ## 직접 작성 코드
 
-직접 작성 C#은 `Assets/InspectionMvp` 12개와 `Assets/CubeScreen/Runtime` 10개입니다. 여기에 `Assets/CubeScreen/Shaders`의 셰이더 2개가 있습니다. 설치한 패키지와 에셋의 코드는 이 목록에 포함하지 않습니다.
+직접 작성 C#은 `Assets/InspectionMvp` 13개와 `Assets/CubeScreen/Runtime` 10개입니다. 여기에 `Assets/CubeScreen/Shaders`의 셰이더 2개가 있습니다. 설치한 패키지와 에셋의 코드는 이 목록에 포함하지 않습니다.
 
 | 영역 | 역할과 수정 경계 |
 | --- | --- |
@@ -14,6 +14,7 @@
 | `InspectionMvp/Runtime/IdentityDocumentView.cs`, `OrderDocumentView.cs` | 같은 문서 원본의 데이터 바인딩, 작은 표시와 상세 표시 전환 |
 | `InspectionMvp/Runtime/DeskInspectableItem.cs` | 문서·더미의 클릭과 길게 누른 뒤 드래그, 검사대 경계 제한 |
 | `InspectionMvp/Editor/InspectionMvpBuilder.cs` | 초기 씬 구성, 샘플 데이터와 한글 아틀라스 생성 도구 |
+| `InspectionMvp/Editor/InspectionDocumentLayout.cs` | 실제 문서 프리팹 서식을 적용하는 재실행 가능한 Odin EditorWindow |
 | `InspectionMvp/Editor/InspectionDeskMigration.cs`, `InspectionNavigationMigration.cs` | 기존 씬의 물품·원본 확대·시점 입력 연결을 보완하는 명시적 마이그레이션 |
 | `InspectionMvp/Tests/Editor/InspectionRuleChecks.cs` | 메뉴에서 실행하는 고객 코드 규칙 15개 검사. NUnit 테스트 발견 수와 별도로 기록 |
 | `CubeScreen/Runtime/PerspectiveCubeViewController.cs`, `CubeNavigationOverlay.cs` | 현재 Perspective 시점의 전환과 가장자리 방향 버튼 |
@@ -21,6 +22,8 @@
 | `CubeScreen/Runtime/CubeScreenController.cs`, `CubeFaceGraphicRaycaster.cs`, `CubeFaceLensDisplay.cs` | 면별 화면을 사용하는 다른 프로토타입의 표시·입력 구성 |
 | `CubeScreen/Runtime/PixelPresentationViewport.cs`, `FaceDepthVisual.cs`, `FaceDepthEffectProfile.cs` | 화면 표시 영역과 깊이 표현·설정 |
 | `CubeScreen/Shaders/CubeFaceLens.shader`, `FaceDepthSprite.shader` | 면 화면의 렌즈 표현과 깊이 스프라이트 렌더링. CPU 입력 보정과 서로 다른 렌즈 경로를 혼동하지 않도록 주의 |
+
+Builder, Migration, 문서 서식 Editor 도구는 씬·프리팹·에셋을 저장할 수 있습니다. 실행 전 출력 대상 파일과 `.meta` 소유권을 확인하고, Unity Editor 담당자 한 명이 순서대로 실행합니다.
 
 ## 데이터와 씬
 
