@@ -55,6 +55,7 @@ namespace SheIsNotHuman.InspectionMvp
         private Tween activeTween;
         private Vector2 npcOrigin, documentsOrigin;
         private bool initialized;
+        private bool originsCaptured;
         private bool dummyMode;
         private Coroutine dummyRoutine;
         private DeskInspectableItem selectedDummy;
@@ -71,10 +72,12 @@ namespace SheIsNotHuman.InspectionMvp
         {
             if (initialized) Unwire();
             flow = owner;
-            if (!initialized)
+            // Owner 교체로 입력을 다시 연결해도 첫 씬 배치가 기준 위치로 남아야 한다.
+            if (!originsCaptured)
             {
                 npcOrigin = npcRoot.anchoredPosition; documentsOrigin = documentsRoot.anchoredPosition;
                 dialogueOrigin = ((RectTransform)dialogueButton.transform).anchoredPosition;
+                originsCaptured = true;
             }
             dialogueButton.onClick.AddListener(Advance);
             closeButton.onClick.AddListener(Close);
@@ -84,6 +87,17 @@ namespace SheIsNotHuman.InspectionMvp
             restartButton.onClick.AddListener(RestartFlow);
             initialized = true;
             ResetPresentation();
+        }
+
+        public override void AttachOwner(InspectionFlowController owner) => flow = owner;
+
+        public override void DetachOwner(InspectionFlowController owner)
+        {
+            if (flow != owner) return;
+            CancelActivity();
+            if (initialized) Unwire();
+            initialized = false;
+            flow = null;
         }
 
         // 버튼의 interactable 표시와 실제 콜백 모두에서 검사해 회전·연출 중 들어온 요청도 막는다.
@@ -153,6 +167,8 @@ namespace SheIsNotHuman.InspectionMvp
             if (dummyCloseButton != null && dummyCloseButton != closeButton) dummyCloseButton.interactable = stable && modalOpen && dummyMode;
             passButton.interactable = nonPassButton.interactable = stable && modalOpen && inspecting && !dummyMode;
             restartButton.interactable = stable && !modalOpen;
+            if (orderDocument != null)
+                orderDocument.SetInputEnabled(stable && modalOpen && inspecting && !dummyMode && focused.Count > 0);
             if (navigation != null)
                 navigation.InputBlocked = modalOpen || modalBusy || motionBusy || DeskInspectableItem.AnyPointerInteraction
                     || (state != InspectionState.Dialogue && state != InspectionState.Inspecting && state != InspectionState.Completed);
@@ -609,14 +625,20 @@ namespace SheIsNotHuman.InspectionMvp
             resultStamp.text = string.Empty; resultStamp.gameObject.SetActive(false);
             dialogueWriter.ShowText(string.Empty);
         }
+        private void OnEnable()
+        {
+            if (flow != null) flow.ResumeAfterPresentationEnable(this);
+        }
+
         private void OnDisable()
         {
-            // 표현 열거자는 컨트롤러에서 실행되므로 뷰만 비활성화해도 호스트를 멈춰야 한다.
-            // 그렇지 않으면 취소 후에도 다음 NPC나 반응 콜백이 다시 화면을 갱신할 수 있다.
-            if (flow != null) flow.StopAllCoroutines();
+            // 표현 코루틴은 Flow에서 실행된다. 현재 View만 전환 잠금을 취소할 수 있고,
+            // 같은 GameObject 전체가 꺼질 때는 Flow 자신의 OnDisable이 이를 처리한다.
+            if (Application.isPlaying && flow != null)
+                flow.SuspendForPresentationDisable(this);
             StopAllCoroutines();
-            CancelActivity();
+            if (flow != null || initialized) CancelActivity();
         }
-        private void OnDestroy() { CancelActivity(); if (initialized) Unwire(); }
+        private void OnDestroy() { if (flow != null || initialized) CancelActivity(); if (initialized) Unwire(); }
     }
 }

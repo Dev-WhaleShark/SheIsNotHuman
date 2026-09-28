@@ -12,6 +12,11 @@ namespace SheIsNotHuman.InspectionMvp
         public abstract bool IsModalBusy { get; }
         public abstract float ReactionHoldSeconds { get; }
 
+        /// <summary>비활성 상태에서도 현재 컨트롤러를 기억해, 다시 켜질 때 보류된 실행을 시작한다.</summary>
+        public abstract void AttachOwner(InspectionFlowController owner);
+        /// <summary>표현을 교체할 때 이전 컨트롤러의 입력 연결과 수명 주기 통지를 해제한다.</summary>
+        public abstract void DetachOwner(InspectionFlowController owner);
+
         /// <summary>입력 의도를 전달할 컨트롤러를 연결한다. 재초기화 시 기존 입력 연결을 정리해야 한다.</summary>
         public abstract void Initialize(InspectionFlowController owner);
         /// <summary>진행 중인 표현을 취소하고 시작 시점의 화면으로 복원한다.</summary>

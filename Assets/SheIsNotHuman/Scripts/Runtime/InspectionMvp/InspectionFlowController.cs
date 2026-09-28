@@ -31,8 +31,12 @@ namespace SheIsNotHuman.InspectionMvp
         public void Configure(InspectionPresentation view, InspectionNpcData[] npcs)
         {
             CancelRun();
+            if (presentation != null && presentation != view)
+                presentation.DetachOwner(this);
             presentation = view;
             roster = npcs;
+            State = InspectionState.Initializing;
+            if (presentation != null) presentation.AttachOwner(this);
             if (started && isActiveAndEnabled)
                 Restart();
         }
@@ -40,13 +44,14 @@ namespace SheIsNotHuman.InspectionMvp
         private void Start()
         {
             started = true;
+            if (presentation != null) presentation.AttachOwner(this);
             Restart();
         }
 
         private void OnEnable()
         {
             if (started)
-                Restart();
+                ResumeAfterPresentationEnable(presentation);
         }
 
         private void OnDisable()
@@ -56,6 +61,22 @@ namespace SheIsNotHuman.InspectionMvp
         }
 
         private void OnDestroy() => CancelRun();
+
+        /// <summary>현재 표현만 컨트롤러의 코루틴과 전환 잠금을 취소할 수 있다.</summary>
+        public void SuspendForPresentationDisable(InspectionPresentation source)
+        {
+            if (source == null || source != presentation || !isActiveAndEnabled) return;
+            CancelRun();
+            State = InspectionState.Initializing;
+        }
+
+        /// <summary>현재 표현과 Flow가 모두 활성일 때 보류된 전체 흐름을 한 번만 시작한다.</summary>
+        public void ResumeAfterPresentationEnable(InspectionPresentation source)
+        {
+            if (started && State == InspectionState.Initializing && isActiveAndEnabled &&
+                source != null && source == presentation && source.isActiveAndEnabled)
+                Restart();
+        }
 
         /// <summary>이전 실행을 취소하고 방문자 순회·판정 횟수·화면을 함께 초기화한다.</summary>
         [Button("처음부터 시작"), DisableInEditorMode]
@@ -75,6 +96,9 @@ namespace SheIsNotHuman.InspectionMvp
                 Debug.LogError("[InspectionMvp] Presentation is missing; configure the flow before starting.", this);
                 return;
             }
+            // Flow는 살아 있어도 View가 꺼져 있으면 표현 코루틴을 시작할 수 없다.
+            // owner 연결은 유지하고 View.OnEnable에서 이 Initializing 상태를 재개한다.
+            if (!presentation.isActiveAndEnabled) return;
 
             // 목록과 제한 수를 고정해 실행 중 Inspector 편집이 순회 순서를 바꾸지 않게 한다.
             // 배열만 복사하므로 개별 NPC 에셋의 내용은 기존 참조를 공유한다.
@@ -235,7 +259,8 @@ namespace SheIsNotHuman.InspectionMvp
             yield return EnterNextNpc();
         }
 
-        private bool CanUsePresentation() => Application.isPlaying && isActiveAndEnabled && presentation != null;
+        private bool CanUsePresentation() => Application.isPlaying && isActiveAndEnabled &&
+            presentation != null && presentation.isActiveAndEnabled;
 
         // 컨트롤러의 전환 잠금과 뷰의 실제 연출 잠금을 함께 검사해 다른 경로의 입력도 차단한다.
         private bool CanChangeModal() => CanUsePresentation()

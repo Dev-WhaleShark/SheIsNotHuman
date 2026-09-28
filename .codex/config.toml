@@ -5,7 +5,6 @@ max_concurrent_threads_per_session = 3
 default_subagent_model = "gpt-6-sol"
 default_subagent_reasoning_effort = "medium"
 
-
 [mcp_servers.unity]
-command = "C:\\Users\\DevWhaleShark\\AppData\\Local\\Unity\\bin\\unity.exe"
-args = ["mcp","--project-path","C:\\Users\\DevWhaleShark\\Documents\\GitHub\\SheIsNotHuman"]
+command = "C:\\Users\\LENOVO\\AppData\\Local\\Unity\\bin\\unity.exe"
+args = ["mcp","--project-path","C:\\Users\\LENOVO\\Documents\\GitHub\\SheIsNotHuman\\SheIsNotHuman"]
