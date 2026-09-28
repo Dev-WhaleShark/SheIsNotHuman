@@ -14,19 +14,48 @@ namespace SheIsNotHuman.InspectionMvp
         public TMP_Text orderNumberText;
         public TMP_Text productText;
         public TMP_Text quantityText;
+        public PhoneDeviceView phoneDevice;
         public bool expanded;
         private InspectionNpcData boundNpc;
+        private PhoneDeviceView Phone => phoneDevice != null ? phoneDevice :
+            (phoneDevice = GetComponentInChildren<PhoneDeviceView>(true));
         private bool HasAuthoredLayout => customerNameText != null || customerCodeText != null ||
             orderNumberText != null || productText != null || quantityText != null;
 
         /// <summary>복제 문서를 만들지 않고 현재 방문자의 내용을 같은 인스턴스에 다시 표시한다.</summary>
-        public void SetExpanded(bool value) { expanded = value; Bind(boundNpc); }
+        public void SetExpanded(bool value)
+        {
+            expanded = value;
+            var phone = Phone;
+            if (phone != null)
+            {
+                if (!value) phone.ResetToHome();
+                phone.SetFocused(value && boundNpc != null && boundNpc.order != null);
+            }
+            RefreshContent();
+        }
 
         /// <summary>주문 정보를 표시하고, 누락된 데이터는 이전 내용이 남지 않도록 비운다.</summary>
         public void Bind(InspectionNpcData npc)
         {
+            if (boundNpc != npc)
+            {
+                var phone = Phone;
+                if (phone != null)
+                {
+                    phone.SetFocused(false);
+                    phone.ResetToHome();
+                }
+            }
             boundNpc = npc;
             if (npc == null || npc.order == null) { Clear(); return; }
+            RefreshContent();
+        }
+
+        private void RefreshContent()
+        {
+            var npc = boundNpc;
+            if (npc == null || npc.order == null) return;
             var data = npc.order;
             if (HasAuthoredLayout)
             {
@@ -46,12 +75,26 @@ namespace SheIsNotHuman.InspectionMvp
         [Button] public void Clear()
         {
             boundNpc = null;
+            var phone = Phone;
+            if (phone != null)
+            {
+                phone.SetFocused(false);
+                phone.ResetToHome();
+            }
             if (!HasAuthoredLayout && content != null) content.text = string.Empty;
             if (customerNameText != null) customerNameText.text = string.Empty;
             if (customerCodeText != null) customerCodeText.text = string.Empty;
             if (orderNumberText != null) orderNumberText.text = string.Empty;
             if (productText != null) productText.text = string.Empty;
             if (quantityText != null) quantityText.text = string.Empty;
+        }
+
+        private void OnDisable()
+        {
+            var phone = Phone;
+            if (phone == null) return;
+            phone.SetFocused(false);
+            phone.ResetToHome();
         }
     }
 }

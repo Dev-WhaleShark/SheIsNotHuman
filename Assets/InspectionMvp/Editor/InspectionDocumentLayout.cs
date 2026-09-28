@@ -36,8 +36,9 @@ namespace SheIsNotHuman.InspectionMvp.Editor
                 throw new InvalidOperationException("Existing document references are required.");
             RequirePrefab(view.identityDocument.gameObject, "IdentityDocument");
             RequirePrefab(view.orderDocument.gameObject, "OrderDocument");
+            var phoneFont = view.orderDocument.content != null ? view.orderDocument.content.font : null;
+            EditPrefab("OrderDocument", root => InspectionPhoneLayout.Layout(root, phoneFont));
             EditPrefab("IdentityDocument", LayoutIdentity);
-            EditPrefab("OrderDocument", LayoutOrder);
             PlaceOnDesk((RectTransform)view.identityDocument.transform, new Vector2(460, 280), new Vector2(-230, -20), .68f);
             PlaceOnDesk((RectTransform)view.orderDocument.transform, new Vector2(310, 480), new Vector2(210, -20), .55f);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -90,40 +91,6 @@ namespace SheIsNotHuman.InspectionMvp.Editor
             portrait.transform.SetAsLastSibling();
             Fill(portrait.transform, "Head", Ink, .32f, .49f, .68f, .82f);
             Fill(portrait.transform, "Shoulders", Ink, .17f, .08f, .83f, .47f);
-            DisableLegacyLabel(rect);
-            view.expanded = false;
-        }
-
-        private static void LayoutOrder(GameObject root)
-        {
-            var view = root.GetComponent<OrderDocumentView>();
-            if (view == null || view.content == null)
-                throw new InvalidOperationException("Order content must already exist.");
-            var font = view.content.font;
-            var rect = (RectTransform)root.transform;
-            Surface(rect, new Vector2(310, 480), Screen);
-            Fill(rect, "Speaker", Ink, .39f, .970f, .61f, .976f);
-            ConfigureText(view.content, "주문서", font, 29, .09f, .86f, .91f, .95f);
-            view.content.alignment = TextAlignmentOptions.Center;
-            Line(rect, "HeaderRule", .085f, .843f, .915f, .846f);
-            Label(rect, "CustomerSection", "주문자 정보", font, 18, .09f, .745f, .90f, .807f);
-            Box(rect, "CustomerNameBox", .085f, .636f, .915f, .734f);
-            Label(rect, "CustomerNameLabel", "이름", font, 12, .11f, .687f, .89f, .723f);
-            view.customerNameText = Label(rect, "CustomerName", "", font, 20, .11f, .643f, .89f, .691f);
-            Box(rect, "CustomerCodeBox", .085f, .515f, .915f, .613f);
-            Label(rect, "CustomerCodeLabel", "고객 코드", font, 12, .11f, .567f, .89f, .603f);
-            view.customerCodeText = Label(rect, "CustomerCode", "", font, 20, .11f, .522f, .89f, .570f);
-            Label(rect, "OrderSection", "주문 정보", font, 18, .09f, .416f, .90f, .478f);
-            Box(rect, "OrderDetailsBox", .085f, .075f, .915f, .400f);
-            Label(rect, "OrderNumberLabel", "주문 번호", font, 12, .11f, .350f, .89f, .387f);
-            view.orderNumberText = Label(rect, "OrderNumber", "", font, 19, .11f, .300f, .89f, .350f);
-            Line(rect, "ProductRule", .11f, .285f, .89f, .288f);
-            Label(rect, "ProductLabel", "주문 상품", font, 12, .11f, .237f, .89f, .274f);
-            view.productText = Label(rect, "Product", "", font, 20, .11f, .170f, .89f, .237f);
-            Label(rect, "QuantityLabel", "수량", font, 12, .11f, .094f, .34f, .147f);
-            view.quantityText = Label(rect, "Quantity", "", font, 20, .39f, .094f, .89f, .147f);
-            view.quantityText.alignment = TextAlignmentOptions.MidlineRight;
-            Fill(rect, "HomeIndicator", Ink, .39f, .031f, .61f, .036f);
             DisableLegacyLabel(rect);
             view.expanded = false;
         }
