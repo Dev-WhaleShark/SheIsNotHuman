@@ -1,7 +1,11 @@
-# Project-scoped supervised collaboration. Permissions are inherited; model defaults are below.
+# 프로젝트 범위의 감독 기반 협업 설정입니다. 권한은 상속하며 기본 모델은 아래에 지정합니다.
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 3
-default_subagent_model = "gpt-6-luna"
-default_subagent_reasoning_effort = "high"
+default_subagent_model = "gpt-6-sol"
+default_subagent_reasoning_effort = "medium"
 
+
+[mcp_servers.unity]
+command = "C:\\Users\\DevWhaleShark\\AppData\\Local\\Unity\\bin\\unity.exe"
+args = ["mcp","--project-path","C:\\Users\\DevWhaleShark\\Documents\\GitHub\\SheIsNotHuman"]
