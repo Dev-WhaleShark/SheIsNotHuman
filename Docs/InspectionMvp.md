@@ -1,6 +1,6 @@
 # 검사형 MVP
 
-대상 씬은 `Assets/Scenes/PerspectiveCubeViewPrototype.unity`입니다. 기존 육면체 화면에서 Front는 NPC, Bottom은 대사와 문서 검사에 사용합니다.
+대상 씬은 `Assets/SheIsNotHuman/Scenes/PerspectiveCubeViewPrototype.unity`입니다. 기존 육면체 화면에서 Front는 NPC, Bottom은 대사와 문서 검사에 사용합니다.
 
 코드와 씬의 역할, 보존해야 할 연결, 유지보수 기준은 [프로젝트 구조](ProjectStructure.md)를 참고합니다.
 
@@ -34,7 +34,7 @@ Bottom의 신분증·주문서와 더미 물품 3개는 같은 입력 컴포넌�
 
 ## 개발 설정
 
-NPC 데이터와 검사 규칙, 진행 컨트롤러, 프레젠테이션을 `Assets/InspectionMvp`에 분리합니다.
+NPC 데이터는 `Assets/SheIsNotHuman/Data`, 검사 규칙과 진행 코드는 `Assets/SheIsNotHuman/Scripts/Runtime/InspectionMvp`에 둡니다.
 
 - `Runtime/InspectionNpcData.cs`: NPC별 이름, 코드, 주문서, 대사 2줄과 PASS/NON PASS 반응. `Samples/`의 에셋에서 수정합니다.
 - `Runtime/InspectionData.cs`: 문서 자료형과 UI에 의존하지 않는 `InspectionRule.ExpectedDecision`.
@@ -47,7 +47,7 @@ NPC 데이터와 검사 규칙, 진행 컨트롤러, 프레젠테이션을 `Asse
 - `Prefabs/IdentityDocument.prefab`, `OrderDocument.prefab`: 실제 검사대와 확대에 사용하는 같은 문서 원본입니다. 내용은 NPC 데이터, 상세 서식은 각 문서 컴포넌트에서 수정합니다. 이전 `IdentityDocumentExpanded.prefab`, `OrderDocumentExpanded.prefab` 에셋은 보존하지만 현재 확대 표시에는 사용하지 않습니다.
 - `Editor/InspectionDeskMigration.cs`: `Tools > Inspection MVP > Migrate desk interactions`에서 기존 MVP를 재생성하지 않고 문서 프리팹 연결·더미·공용 확대창을 구성합니다.
 - `Editor/InspectionNavigationMigration.cs`: `Tools > Inspection MVP > Navigation Migration`에서 기존 Perspective 씬에 가장자리 방향 버튼과 왜곡 보정 레이캐스터를 연결합니다.
-- `Assets/CubeScreen/Runtime/LensDistortionCoordinates.cs`, `DistortionCorrectedGraphicRaycaster.cs`: 설치된 URP Lens Distortion의 화면 변형을 반영한 클릭·드래그 좌표 변환입니다. 후처리 효과 자체는 변경하지 않습니다.
+- `Assets/SheIsNotHuman/Scripts/Runtime/CubeScreen/LensDistortionCoordinates.cs`, `DistortionCorrectedGraphicRaycaster.cs`: 설치된 URP Lens Distortion의 화면 변형을 반영한 클릭·드래그 좌표 변환입니다. 후처리 효과 자체는 변경하지 않습니다.
 - `Editor/InspectionDeskMigration.ApplyFocus()`: `Tools > Inspection MVP > Migrate original object focus`에서 현재 씬의 원본 이동 확대와 대사 숨김을 연결합니다. 이전 별도 팝업 표현을 비활성화하고 원본·최소 판정 버튼·차단막을 사용하는 WorldSpace `FocusCanvas`를 구성합니다.
 - `InspectionMvpView`의 `dialogueHideSeconds`(기본 0.22), `dialogueHideOffset`(0,18), `focusDepthRatio`(0.7): 대사 사라짐 시간·이동량과 확대 시 카메라 깊이 비율입니다. 반응 대사도 읽기 시간이 지난 뒤 같은 연출로 사라집니다.
 
@@ -102,7 +102,7 @@ NPC 데이터와 검사 규칙, 진행 컨트롤러, 프레젠테이션을 `Asse
 - 무애니메이션 세 명: `tmp/mvp-stage2-npc1.json`, `mvp-stage2-npc2-wrong.json`, `mvp-stage2-npc3-wrong.json`, `mvp-stage2-restarted.json`.
 - 최종 연출 2회: `tmp/mvp-final-loop1-npc1.json`~`npc3.json`, `mvp-final-loop2-npc1-os.json`, `mvp-final-loop2-npc2.json`, `mvp-final-loop2-npc3.json`.
 - 실제 OS 입력: `tmp/mvp-os-*-click.json` 및 이후 상태 결과.
-- 해상도: `tmp/mvp-modal-layout1280.json`, `tmp/mvp-modal-layout1920.json`; 캡처 `Assets/Screenshots/InspectionMvp/inspection-1280.png`, `inspection-1920.png`, `desk-1280.png`, `completed-1920.png`.
+- 해상도: `tmp/mvp-modal-layout1280.json`, `tmp/mvp-modal-layout1920.json`; 캡처 `Docs/Screenshots/InspectionMvp/inspection-1280.png`, `inspection-1920.png`, `desk-1280.png`, `completed-1920.png`.
 - 규칙 재검사: `tmp/mvp-final-rules.json` (15/15).
 - 최종 추가 클린 루프: `tmp/mvp-clean-npc1.json`, `mvp-clean-npc2.json`, `mvp-clean-npc3.json` (29+25+28항목), `tmp/mvp-clean-console-status.json` (오류·경고 0, compilationFailed=false).
 - 최종 저장 상태: `tmp/mvp-final-saved-state.json` (대상 씬, 저장 완료, Play 종료, 애니메이션 활성화, NPC 3명, EventSystem 1개, 정적 폰트 연결).
@@ -141,9 +141,9 @@ NPC 데이터와 검사 규칙, 진행 컨트롤러, 프레젠테이션을 `Asse
 | 화면 | 1280×720·1920×1080 검사대와 문서 비교창 | 통과, `revision-final-desk-layout720.json`, `revision-final-desk-layout1080.json`, `revision-final-document-layout720.json`, `revision-final-documents-layout1080.json`에 잘림·텍스트 넘침·누락 글자 없음 |
 | 규칙 | 고객 코드 독립 판정 재검사 | 15/15 통과, `revision-final-rules.json` |
 
-위 JSON 경로는 모두 프로젝트의 `tmp/` 기준입니다. 최종 캡처는 `Assets/Screenshots/InspectionRevision/final-desk-1280.png`, `final-documents-1280.png`, `final-documents-1920.png`, `final-corrected-1280.png`, `final-corrected-1920.png`에 보존합니다. 최초 단계의 잘림·경계 불일치 캡처도 삭제하지 않았습니다.
+위 JSON 경로는 모두 프로젝트의 `tmp/` 기준입니다. 최종 캡처는 `Docs/Screenshots/InspectionRevision/final-desk-1280.png`, `final-documents-1280.png`, `final-documents-1920.png`, `final-corrected-1280.png`, `final-corrected-1920.png`에 보존합니다. 초기 잘림·경계 불일치 캡처는 이번 자산 정리에서 제거했습니다.
 
-1920×1080 작은 문서까지 표시한 검사대도 별도로 확인했습니다(`revision-final-compact-layout1080.json`, 표시 텍스트 12개, 위반·누락 글자 없음; `final-desk-documents-1920.png`).
+1920×1080 작은 문서까지 표시한 검사대도 별도로 확인했습니다(`revision-final-compact-layout1080.json`, 표시 텍스트 12개, 위반·누락 글자 없음; `Docs/Screenshots/InspectionRevision/final-desk-documents-1920.png`).
 
 후속 수정 전 Console에는 Unity 조직 정보를 가져오지 못한 기존 네트워크 오류가 1개 있었습니다(`tmp/revision-console-baseline.json`). 최종 Pipeline 누적 버퍼의 error=1은 이 이력을 포함하며, 실제 최종 Console 집계는 오류·경고 0입니다. 사용자 수정인 조직 설정을 변경하지 않았습니다. 별도 플레이어 빌드와 XR·다른 전체 화면 왜곡 조합은 미실행입니다.
 
@@ -171,7 +171,7 @@ NPC 데이터와 검사 규칙, 진행 컨트롤러, 프레젠테이션을 `Asse
 | 최종 컴파일·실제 Console | compilationFailed=false, 오류 0·경고 0; `focus-final-console.json`의 groundTruth 기준 |
 | 저장된 씬·프리팹 연결 | Play 종료, 씬 저장 완료, NPC 3명·애니메이션 활성·EventSystem 1개·FocusCanvas 1개·물품 5개·compact 프리팹 2개 연결; `focus-final-final-saved-state.json`, `focus-final-asset-links.json` |
 
-실제 화면은 `Assets/Screenshots/InspectionFocus/final-documents-1280.png`, `final-documents-1920.png`에 보존했습니다. 신분증 실루엣은 원본 `IdentityDocument.prefab`의 영구 자식이며 확대할 때만 보입니다.
+실제 화면은 `Docs/Screenshots/InspectionFocus/final-documents-1280.png`, `final-documents-1920.png`에 보존했습니다. 신분증 실루엣은 원본 `IdentityDocument.prefab`의 영구 자식이며 확대할 때만 보입니다.
 
 첫 마이그레이션에서 Unity의 native null과 C# null 차이로 누락된 Canvas를 추가하지 못한 오류를 수정했습니다. 기존 부분 생성 노드를 유지하고 필요한 컴포넌트를 추가하도록 고쳤으며, 최종 두 번 적용에서 오브젝트 120→120, FocusCanvas 1개, compact 문서 프리팹 2개 연결을 확인했습니다. 이전 큰 종이의 초상화가 사라지는 회귀도 원본 ID의 실루엣으로 복구했습니다.
 

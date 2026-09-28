@@ -1,35 +1,34 @@
 # 프로젝트 구조와 유지보수
 
-현재 플레이 진입점은 `Assets/Scenes/PerspectiveCubeViewPrototype.unity`입니다. Unity 버전은 `ProjectSettings/ProjectVersion.txt`를 기준으로 하며 현재 6000.5.4f1입니다. 조작·Inspector 설정·검증 이력은 [InspectionMvp.md](InspectionMvp.md), 에이전트 작업 절차는 [AgentWorkflow.md](AgentWorkflow.md)에 있습니다.
+현재 플레이 진입점은 `Assets/SheIsNotHuman/Scenes/PerspectiveCubeViewPrototype.unity`입니다. Unity 버전은 `ProjectSettings/ProjectVersion.txt`를 기준으로 하며 현재 6000.5.4f1입니다. 조작·Inspector 설정·검증 이력은 [InspectionMvp.md](InspectionMvp.md), 에이전트 작업 절차는 [AgentWorkflow.md](AgentWorkflow.md)에 있습니다.
 
 ## 직접 작성 코드
 
-직접 작성 C#은 `Assets/InspectionMvp` 13개와 `Assets/CubeScreen/Runtime` 10개입니다. 여기에 `Assets/CubeScreen/Shaders`의 셰이더 2개가 있습니다. 설치한 패키지와 에셋의 코드는 이 목록에 포함하지 않습니다.
+직접 작성 C#은 `Assets/SheIsNotHuman/Scripts`, 셰이더는 `Assets/SheIsNotHuman/Shaders`에 있습니다. 설치한 패키지와 에셋의 코드는 이 목록에 포함하지 않습니다.
 
 | 영역 | 역할과 수정 경계 |
 | --- | --- |
-| `InspectionMvp/Runtime/InspectionData.cs`, `InspectionNpcData.cs` | 문서·판정 자료형, UI에 의존하지 않는 검사 규칙, NPC별 대사와 문서 데이터 |
-| `InspectionMvp/Runtime/InspectionFlowController.cs` | 상태·현재 NPC·판정 확정을 소유하는 유일한 진행 책임자 |
-| `InspectionMvp/Runtime/InspectionPresentation.cs`, `InspectionMvpView.cs` | 진행이 기다리는 표시 작업의 계약과 구현. Text Animator 대사, DOTween 연출, 동일 원본 확대·복귀·취소 |
-| `InspectionMvp/Runtime/IdentityDocumentView.cs`, `OrderDocumentView.cs` | 같은 문서 원본의 데이터 바인딩, 작은 표시와 상세 표시 전환 |
-| `InspectionMvp/Runtime/DeskInspectableItem.cs` | 문서·더미의 클릭과 길게 누른 뒤 드래그, 검사대 경계 제한 |
-| `InspectionMvp/Editor/InspectionMvpBuilder.cs` | 초기 씬 구성, 샘플 데이터와 한글 아틀라스 생성 도구 |
-| `InspectionMvp/Editor/InspectionDocumentLayout.cs` | 실제 문서 프리팹 서식을 적용하는 재실행 가능한 Odin EditorWindow |
-| `InspectionMvp/Editor/InspectionDeskMigration.cs`, `InspectionNavigationMigration.cs` | 기존 씬의 물품·원본 확대·시점 입력 연결을 보완하는 명시적 마이그레이션 |
-| `InspectionMvp/Tests/Editor/InspectionRuleChecks.cs` | 메뉴에서 실행하는 고객 코드 규칙 15개 검사. NUnit 테스트 발견 수와 별도로 기록 |
-| `CubeScreen/Runtime/PerspectiveCubeViewController.cs`, `CubeNavigationOverlay.cs` | 현재 Perspective 시점의 전환과 가장자리 방향 버튼 |
-| `CubeScreen/Runtime/LensDistortionCoordinates.cs`, `DistortionCorrectedGraphicRaycaster.cs` | URP 화면 왜곡과 입력 좌표의 대응, 현재 면·전환 중 UI 입력 제한 |
-| `CubeScreen/Runtime/CubeScreenController.cs`, `CubeFaceGraphicRaycaster.cs`, `CubeFaceLensDisplay.cs` | 면별 화면을 사용하는 다른 프로토타입의 표시·입력 구성 |
-| `CubeScreen/Runtime/PixelPresentationViewport.cs`, `FaceDepthVisual.cs`, `FaceDepthEffectProfile.cs` | 화면 표시 영역과 깊이 표현·설정 |
-| `CubeScreen/Shaders/CubeFaceLens.shader`, `FaceDepthSprite.shader` | 면 화면의 렌즈 표현과 깊이 스프라이트 렌더링. CPU 입력 보정과 서로 다른 렌즈 경로를 혼동하지 않도록 주의 |
+| `Scripts/Runtime/InspectionMvp/InspectionData.cs`, `InspectionNpcData.cs` | 문서·판정 자료형, UI에 의존하지 않는 검사 규칙, NPC별 대사와 문서 데이터 |
+| `Scripts/Runtime/InspectionMvp/InspectionFlowController.cs` | 상태·현재 NPC·판정 확정을 소유하는 유일한 진행 책임자 |
+| `Scripts/Runtime/InspectionMvp/InspectionPresentation.cs`, `InspectionMvpView.cs` | 진행이 기다리는 표시 작업의 계약과 구현. Text Animator 대사, DOTween 연출, 동일 원본 확대·복귀·취소 |
+| `Scripts/Runtime/InspectionMvp/IdentityDocumentView.cs`, `OrderDocumentView.cs` | 같은 문서 원본의 데이터 바인딩, 작은 표시와 상세 표시 전환 |
+| `Scripts/Runtime/InspectionMvp/DeskInspectableItem.cs` | 문서·더미의 클릭과 길게 누른 뒤 드래그, 검사대 경계 제한 |
+| `Scripts/Editor/InspectionMvpBuilder.cs` | 초기 씬 구성, 샘플 데이터와 한글 아틀라스 생성 도구 |
+| `Scripts/Editor/InspectionDocumentLayout.cs` | 실제 문서 프리팹 서식을 적용하는 재실행 가능한 Odin EditorWindow |
+| `Scripts/Editor/InspectionDeskMigration.cs`, `InspectionNavigationMigration.cs` | 씬의 물품·시점 입력을 보완하는 명시적 마이그레이션 |
+| `Tests/Editor/InspectionRuleChecks.cs` | 메뉴에서 실행하는 고객 코드 규칙 15개 검사. NUnit 테스트 발견 수와 별도로 기록 |
+| `Scripts/Runtime/CubeScreen/PerspectiveCubeViewController.cs`, `CubeNavigationOverlay.cs` | 현재 Perspective 시점의 전환과 가장자리 방향 버튼 |
+| `Scripts/Runtime/CubeScreen/LensDistortionCoordinates.cs`, `DistortionCorrectedGraphicRaycaster.cs` | URP 화면 왜곡과 입력 좌표의 대응, 현재 면·전환 중 UI 입력 제한 |
+| `Scripts/Runtime/CubeScreen/CubeFace.cs` | 기존 직렬화 순서를 유지하는 면 식별자 |
+| `Shaders/FaceDepthSprite.shader` | 현재 씬의 깊이 스프라이트 렌더링 |
 
 Builder, Migration, 문서 서식 Editor 도구는 씬·프리팹·에셋을 저장할 수 있습니다. 실행 전 출력 대상 파일과 `.meta` 소유권을 확인하고, Unity Editor 담당자 한 명이 순서대로 실행합니다.
 
 ## 데이터와 씬
 
-`Assets/InspectionMvp/Samples`에서 NPC 대사와 문서 내용을 바꿉니다. `Prefabs/IdentityDocument.prefab`과 `OrderDocument.prefab`은 검사대에 놓고 카메라 앞으로 이동시키는 실제 원본입니다. 이름에 `Expanded`가 붙은 이전 프리팹은 현재 원본 확대에 사용하지 않지만 기존 생성·마이그레이션 경로와 함께 보존합니다.
+`Assets/SheIsNotHuman/Data`에서 NPC 대사와 문서 내용을 바꿉니다. `Assets/SheIsNotHuman/Prefabs/IdentityDocument.prefab`과 `OrderDocument.prefab`은 검사대에 놓고 카메라 앞으로 이동시키는 실제 원본입니다. `Expanded` 프리팹 두 개도 현재 씬의 비활성 인스턴스와 마이그레이션 경로가 참조하므로 보존합니다.
 
-`Assets/Scenes`에는 현재 MVP 외에도 `CubeScreenPrototype`, `PerspectiveCameraLensPrototype`, `UnifiedFaceViewPrototype`이 있습니다. 이들은 시점·화면 표현을 비교한 프로토타입입니다. 현재 MVP와 구조가 같다고 가정하거나, 현재 씬에 없다는 이유만으로 관련 스크립트·머티리얼·RenderTexture를 삭제하지 않습니다.
+`Assets/SheIsNotHuman/Scenes`에는 현재 MVP 씬만 있습니다. 비교용 프로토타입 씬 세 개와 그 전용 자산은 제거했습니다. 현재 씬에서 공유하는 머티리얼·렌즈 프로필·플레이스홀더 텍스처는 보존했습니다.
 
 기존 MVP 씬을 실행하기 위해 Builder나 Migration을 다시 실행할 필요는 없습니다. 특히 초기 생성 도구는 개발 단계 기본값을 사용하므로 현재 저장된 NPC 3명·애니메이션 활성 설정과 구분합니다. 필요한 구조 변경이 있을 때 해당 범위의 Migration만 실행하고 씬·프리팹 변경을 확인합니다.
 
@@ -46,6 +45,8 @@ Builder, Migration, 문서 서식 Editor 도구는 씬·프리팹·에셋을 저
 한글 아틀라스 생성 도구는 현재 C# 파일의 주석을 포함한 전체 텍스트에서 문자를 수집합니다. 주석 추가만으로 이미 저장된 아틀라스가 변경되지는 않지만, 이후 명시적으로 재생성하면 수집 문자 수가 늘어날 수 있습니다. 주석 정리를 위해 아틀라스를 다시 만들 필요는 없습니다.
 
 ## 2026-09-23 주석·구조 정리
+
+다음 기록은 2026-09-23 당시의 상태와 검증 이력입니다. 위의 현재 폴더 구조와 구분해 읽습니다.
 
 기준 커밋은 `ebdb079ba90002558a709a294f10ff6b156806bc`이며 시작 시 작업 트리는 깨끗했습니다. 직접 작성 C# 22개와 셰이더 2개에 한국어 역할·공개 진입점·입력 잠금·수명 관리·좌표 변환 설명을 보강했습니다. 실행 코드, 렌더 수식, 공개 API, 직렬화 필드와 GUID를 변경하지 않았습니다. 복잡한 취소와 입력 경로는 동작을 보존하면서 읽을 수 있도록 이유와 불변조건을 주석으로 설명했습니다.
 

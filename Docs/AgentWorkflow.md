@@ -56,9 +56,9 @@ Orca `worker-start`에서 `--effort`를 쓰려면 `--model`도 지정해야 하�
 
 | 작업 경계 | 현재 파일과 조율 조건 |
 | --- | --- |
-| 검사 데이터·흐름·규칙 | `Assets/InspectionMvp/Runtime/InspectionData.cs`, `InspectionNpcData.cs`, `InspectionFlowController.cs`의 데이터와 판정 계약. 메뉴 규칙 검사는 `Assets/InspectionMvp/Tests/Editor/InspectionRuleChecks.cs`에 있으며 NUnit 발견 수와 별도로 센다. |
-| 화면·입력 결합 | `InspectionMvpView.cs`, `DeskInspectableItem.cs`와 `Assets/CubeScreen/Runtime/PerspectiveCubeViewController.cs`, `DistortionCorrectedGraphicRaycaster.cs`, `LensDistortionCoordinates.cs`는 같은 상호작용을 이룬다. 병렬 수정 전 좌표 변환, 현재 면, 확대 중 입력 잠금, 취소 API 계약을 합의한다. |
-| 씬 구성·마이그레이션 | `Assets/InspectionMvp/Editor/InspectionMvpBuilder.cs`, `InspectionDeskMigration.cs`, `InspectionNavigationMigration.cs`, `InspectionDocumentLayout.cs`의 코드 소유권과 실제 씬·프리팹·에셋 및 `.meta` 출력 소유권을 각각 지정한다. 실행은 단일 Editor 담당자가 맡는다. |
+| 검사 데이터·흐름·규칙 | `Assets/SheIsNotHuman/Scripts/Runtime/InspectionMvp/InspectionData.cs`, `InspectionNpcData.cs`, `InspectionFlowController.cs`의 데이터와 판정 계약. 메뉴 규칙 검사는 `Assets/SheIsNotHuman/Tests/Editor/InspectionRuleChecks.cs`에 있으며 NUnit 발견 수와 별도로 센다. |
+| 화면·입력 결합 | `InspectionMvpView.cs`, `DeskInspectableItem.cs`와 `Assets/SheIsNotHuman/Scripts/Runtime/CubeScreen/PerspectiveCubeViewController.cs`, `DistortionCorrectedGraphicRaycaster.cs`, `LensDistortionCoordinates.cs`는 같은 상호작용을 이룬다. 병렬 수정 전 좌표 변환, 현재 면, 확대 중 입력 잠금, 취소 API 계약을 합의한다. |
+| 씬 구성·마이그레이션 | `Assets/SheIsNotHuman/Scripts/Editor/InspectionMvpBuilder.cs`, `InspectionDeskMigration.cs`, `InspectionNavigationMigration.cs`, `InspectionDocumentLayout.cs`의 코드 소유권과 실제 씬·프리팹·에셋 및 `.meta` 출력 소유권을 각각 지정한다. 실행은 단일 Editor 담당자가 맡는다. |
 | 최종 검증 | 모든 관련 소스 작성자의 쓰기를 동결한 최신 통합 상태에서 독립 검증자가 컴파일, 관련 검사, 실제 씬 동작을 확인한다. |
 
 ## 작업 기록
@@ -104,7 +104,7 @@ Editor 가져오기·컴파일·테스트를 시작하기 전에 모든 작성�
 
 - 문서/에이전트 설정 변경: 설정 파싱, 파일 참조, 역할 간 충돌, 위임/결과 회수 확인. 게임 동작 변경이 없으면 Unity 실행을 불필요하게 요구하지 않는다.
 - C# 런타임/Editor 변경: 실제 Unity 컴파일 결과와 관련 테스트 확인. 생성된 csproj의 빌드 결과만으로 Unity 검증을 대체하지 않는다.
-- 시각/입력/씬 변경: 관련 씬의 실제 동작과 화면, Console 오류/경고를 확인한다. CubeScreen 관련 작업은 현행 `Docs/ProjectStructure.md`, `Docs/InspectionMvp.md`와 실제 대상 씬 파일을 대조한다. 현재 MVP 씬은 `Assets/Scenes/PerspectiveCubeViewPrototype.unity`이지만 작업 대상은 요청과 현재 파일에서 확인한다.
+- 시각/입력/씬 변경: 관련 씬의 실제 동작과 화면, Console 오류/경고를 확인한다. CubeScreen 관련 작업은 현행 `Docs/ProjectStructure.md`, `Docs/InspectionMvp.md`와 실제 대상 씬 파일을 대조한다. 현재 MVP 씬은 `Assets/SheIsNotHuman/Scenes/PerspectiveCubeViewPrototype.unity`이지만 작업 대상은 요청과 현재 파일에서 확인한다.
 - `InspectionRuleChecks`의 메뉴 실행 규칙 검사 수와 Unity Test Framework에서 발견·실행한 NUnit 테스트 수를 별도 항목으로 기록한다. 테스트가 0개 발견되면 0개 통과를 성공 근거로 삼지 않는다. 변경 위험에 맞는 재현 시나리오 또는 필요한 회귀 테스트를 준비한다.
 - Editor가 열려 있으면 적용되는 Unity 스킬을 통해 연결된 올바른 프로젝트를 확인한다. 같은 프로젝트로 두 번째 Editor를 실행하지 않는다.
 - 최종 검증은 코드 쓰기가 멈춘 상태에서 수행하고, 검증 후 관련 파일이 바뀌면 영향받는 검사를 다시 한다.
