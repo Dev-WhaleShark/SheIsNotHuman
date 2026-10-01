@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "issuedBy": "supervisor-terminal-or-dispatch",
+  "owner": "sole-edit-and-format-owner",
+  "sessionId": "known-codex-session-id",
+  "agentId": null,
+  "writersFrozen": true,
+  "editorIdle": true,
+  "issuedAt": "2026-10-01T08:00:00.000Z",
+  "expiresAt": "2026-10-01T08:04:00.000Z",
+  "mode": "folder",
+  "folder": "Assets/SheIsNotHuman/Scripts",
+  "includes": [
+    {
+      "path": "Assets/SheIsNotHuman/Scripts/Example.cs",
+      "owner": "sole-edit-and-format-owner",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

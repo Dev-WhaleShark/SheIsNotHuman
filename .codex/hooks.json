@@ -1,0 +1,50 @@
+{
+  "description": "Additive deterministic repository guards and lease-scoped whitespace quality hooks; review and trust using /hooks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const s=require('node:child_process').spawnSync;const e=process.argv[1];const r=s('git',['rev-parse','--show-toplevel'],{encoding:'utf8',timeout:3000,windowsHide:true});if(r.status!==0){console.error('훅 시작 실패: git 작업 공간을 확인한다.');process.exit(e==='PreToolUse'?2:1)}const p=s(process.execPath,[require('node:path').join(r.stdout.trim(),'scripts/agent-guard.js'),e],{stdio:'inherit',timeout:25000,windowsHide:true});if(p.status!==0){console.error('훅 핸들러 실패: Node/파일/입력을 확인하고 최소 검사를 재실행한다.');process.exit(e==='PreToolUse'?2:1)}\" SessionStart",
+            "commandWindows": "node -e \"const s=require('node:child_process').spawnSync;const e=process.argv[1];const r=s('git',['rev-parse','--show-toplevel'],{encoding:'utf8',timeout:3000,windowsHide:true});if(r.status!==0){console.error('훅 시작 실패: git 작업 공간을 확인한다.');process.exit(e==='PreToolUse'?2:1)}const p=s(process.execPath,[require('node:path').join(r.stdout.trim(),'scripts/agent-guard.js'),e],{stdio:'inherit',timeout:25000,windowsHide:true});if(p.status!==0){console.error('훅 핸들러 실패: Node/파일/입력을 확인하고 최소 검사를 재실행한다.');process.exit(e==='PreToolUse'?2:1)}\" SessionStart",
+            "timeout": 30,
+            "additionalContextLimit": 1800,
+            "statusMessage": "Repository SessionStart policy"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|exec_command|apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const s=require('node:child_process').spawnSync;const e=process.argv[1];const r=s('git',['rev-parse','--show-toplevel'],{encoding:'utf8',timeout:3000,windowsHide:true});if(r.status!==0){console.error('훅 시작 실패: git 작업 공간을 확인한다.');process.exit(e==='PreToolUse'?2:1)}const p=s(process.execPath,[require('node:path').join(r.stdout.trim(),'scripts/agent-guard.js'),e],{stdio:'inherit',timeout:25000,windowsHide:true});if(p.status!==0){console.error('훅 핸들러 실패: Node/파일/입력을 확인하고 최소 검사를 재실행한다.');process.exit(e==='PreToolUse'?2:1)}\" PreToolUse",
+            "commandWindows": "node -e \"const s=require('node:child_process').spawnSync;const e=process.argv[1];const r=s('git',['rev-parse','--show-toplevel'],{encoding:'utf8',timeout:3000,windowsHide:true});if(r.status!==0){console.error('훅 시작 실패: git 작업 공간을 확인한다.');process.exit(e==='PreToolUse'?2:1)}const p=s(process.execPath,[require('node:path').join(r.stdout.trim(),'scripts/agent-guard.js'),e],{stdio:'inherit',timeout:25000,windowsHide:true});if(p.status!==0){console.error('훅 핸들러 실패: Node/파일/입력을 확인하고 최소 검사를 재실행한다.');process.exit(e==='PreToolUse'?2:1)}\" PreToolUse",
+            "timeout": 30,
+            "additionalContextLimit": 1800,
+            "statusMessage": "Repository PreToolUse policy"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(Bash|exec_command|apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const s=require('node:child_process').spawnSync;const e=process.argv[1];const r=s('git',['rev-parse','--show-toplevel'],{encoding:'utf8',timeout:3000,windowsHide:true});if(r.status!==0){console.error('훅 시작 실패: git 작업 공간을 확인한다.');process.exit(e==='PreToolUse'?2:1)}const p=s(process.execPath,[require('node:path').join(r.stdout.trim(),'scripts/agent-guard.js'),e],{stdio:'inherit',timeout:25000,windowsHide:true});if(p.status!==0){console.error('훅 핸들러 실패: Node/파일/입력을 확인하고 최소 검사를 재실행한다.');process.exit(e==='PreToolUse'?2:1)}\" PostToolUse",
+            "commandWindows": "node -e \"const s=require('node:child_process').spawnSync;const e=process.argv[1];const r=s('git',['rev-parse','--show-toplevel'],{encoding:'utf8',timeout:3000,windowsHide:true});if(r.status!==0){console.error('훅 시작 실패: git 작업 공간을 확인한다.');process.exit(e==='PreToolUse'?2:1)}const p=s(process.execPath,[require('node:path').join(r.stdout.trim(),'scripts/agent-guard.js'),e],{stdio:'inherit',timeout:25000,windowsHide:true});if(p.status!==0){console.error('훅 핸들러 실패: Node/파일/입력을 확인하고 최소 검사를 재실행한다.');process.exit(e==='PreToolUse'?2:1)}\" PostToolUse",
+            "timeout": 30,
+            "additionalContextLimit": 1800,
+            "statusMessage": "Repository PostToolUse policy"
+          }
+        ]
+      }
+    ]
+  }
+}

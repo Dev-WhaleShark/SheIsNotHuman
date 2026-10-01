@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+
 #endif
 
 namespace SheIsNotHuman.InspectionMvp

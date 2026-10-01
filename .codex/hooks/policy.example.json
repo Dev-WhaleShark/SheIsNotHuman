@@ -1,0 +1,11 @@
+{
+  "description": "Documentation-only policy inventory; not loaded as runtime overrides.",
+  "blockedGitOperations": ["push --force", "push --force-with-lease", "push --mirror", "reset --hard", "clean -f/-d/-x"],
+  "blockedGeneratedPaths": ["Library/", "Temp/", "obj/", "*.csproj", "*.sln", "*.slnx"],
+  "formatExcludedPaths": ["Assets/Plugins/", "Packages/", "Library/", "Temp/", "obj/", "*.g.cs", "*.generated.cs", "*.designer.cs"],
+  "maxLeaseMilliseconds": 300000,
+  "maxFormatFiles": 16,
+  "maxInputBytes": 1048576,
+  "newFirstPartyUnity6Pattern": "new UnityEngine.WWW(...)",
+  "maxAdditionalContextCharacters": 6000
+}
