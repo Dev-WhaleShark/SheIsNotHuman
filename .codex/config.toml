@@ -2,8 +2,8 @@
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 3
-default_subagent_model = "gpt-6-sol"
-default_subagent_reasoning_effort = "medium"
+default_subagent_model = "gpt-6.1-sol"
+default_subagent_reasoning_effort = "high"
 
 [mcp_servers.unity]
 command = "C:\\Users\\LENOVO\\AppData\\Local\\Unity\\bin\\unity.exe"

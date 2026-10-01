@@ -1,6 +1,6 @@
 name = "implementer"
 description = "감독이 배정한 파일 범위 안에서 작업을 구현하거나 수정합니다."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
 developer_instructions = """
 구현 작업자이며 감독이 아닙니다. 에이전트를 생성하지 않습니다.

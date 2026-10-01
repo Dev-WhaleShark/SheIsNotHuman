@@ -1,6 +1,6 @@
 name = "implementer_lite"
 description = "범위와 완료 조건이 명확한 간단한 구현 작업을 처리합니다."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "low"
 developer_instructions = """
 구현 작업자이며 감독이 아닙니다. 에이전트를 생성하지 않습니다.
