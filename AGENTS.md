@@ -28,7 +28,7 @@
 
 ## Unity
 
-- 버전은 `ProjectSettings/ProjectVersion.txt`로 확인한다. CubeScreen 작업만 현행 `Docs/ProjectStructure.md`, `Docs/InspectionMvp.md`와 대상 씬·코드를 확인한다. 요청하지 않은 `Assets/Scenes/TestScene.unity`와 해당 `.meta`는 CubeScreen 범위에서 제외한다.
+- 버전은 `ProjectSettings/ProjectVersion.txt`로 확인한다. 큐브 화면·ServiceDesk 작업만 현행 `Docs/ProjectStructure.md`, `Docs/ServiceDesk.md`와 대상 씬·코드를 확인한다. 요청하지 않은 `Assets/Scenes/TestScene.unity`와 해당 `.meta`는 이 범위에서 제외한다.
 - Editor 작업 전 관련 Unity 스킬과 활성 프로젝트·인스턴스·대상 씬·dirty/저장·Play 상태를 확인·인계한다. Editor 담당자는 한 명이며 같은 프로젝트의 두 번째 Editor를 열거나 미저장 씬을 버리지 않는다.
 - 가져오기·컴파일·테스트 전 관련 작성자를 모두 동결한다. 씬·프리팹·패키지·Play·검사 작업은 순서대로 실행하고 수정 시 검증을 멈춰 소유권을 재배정한다.
 - Builder/Migration 전 간접 출력 에셋과 `.meta`까지 작성자를 배정한다. Editor 권한은 파일 소유권이 아니다. GUID를 보존하고 `Library/`, `Temp/`, `obj/`, 생성 솔루션·프로젝트 파일은 편집하지 않는다.

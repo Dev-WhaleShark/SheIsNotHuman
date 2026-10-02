@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a5c3fb7672b91eb4bab0af9cdfd82be4, type: 3}
   m_Name: NPC_02
-  m_EditorClassIdentifier: Assembly-CSharp::SheIsNotHuman.InspectionMvp.InspectionNpcData
+  m_EditorClassIdentifier: Assembly-CSharp::WhaleShark.Gameplay.VisitorProfile
   npcId: NPC_02
   displayName: "\uC774\uB3C4\uD604"
   portraitColor: {r: 0.64, g: 0.58, b: 0.54, a: 1}
