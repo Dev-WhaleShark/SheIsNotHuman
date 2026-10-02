@@ -251,7 +251,10 @@ namespace WhaleShark.Gameplay
         private void CancelRun()
         {
             runVersion++; StopAllCoroutines(); modalTransition = false;
-            dialogue?.Cancel(); visitor?.Cancel(); desk?.CancelActivity(); cubeAdapter?.ResetConnection();
+            if (dialogue != null) dialogue.Cancel();
+            if (visitor != null) visitor.Cancel();
+            if (desk != null) desk.CancelActivity();
+            if (cubeAdapter != null) cubeAdapter.ResetConnection();
         }
         private static string DecisionLabel(VisitorDecision decision) => decision == VisitorDecision.Pass ? "PASS" : "NON PASS";
         [Serializable]

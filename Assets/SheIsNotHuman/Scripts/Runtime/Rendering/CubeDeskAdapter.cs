@@ -35,8 +35,8 @@ namespace WhaleShark.Rendering
         {
             if (context != null) context.CoordinateConverter = null;
             if (rig != null) rig.InputBlocked = false;
-            desk?.SetExternalInput(true,false);
-            focus?.ConfigureProjection(null,focusDepthRatio);
+            if (desk != null) desk.SetExternalInput(true,false);
+            if (focus != null) focus.ConfigureProjection(null,focusDepthRatio);
         }
         public IEnumerator FocusFront(bool animate) { yield return Focus(CubeFace.Front,animate); }
         public IEnumerator FocusBottom(bool animate) { yield return Focus(CubeFace.Bottom,animate); }

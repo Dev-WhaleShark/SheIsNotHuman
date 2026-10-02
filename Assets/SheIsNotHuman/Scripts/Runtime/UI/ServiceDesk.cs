@@ -225,18 +225,24 @@ namespace WhaleShark.UI
         public void CancelActivity()
         {
             activityVersion++; StopAllCoroutines(); tweens.Cancel(); inputLock.Clear();
-            context?.Cancel(); focus?.CancelAndRestore(); dialoguePanel?.Cancel(); mobileDevice?.SetInputEnabled(false);
+            if (context != null) context.Cancel();
+            if (focus != null) focus.CancelAndRestore();
+            if (dialoguePanel != null) dialoguePanel.Cancel();
+            if (mobileDevice != null) mobileDevice.SetInputEnabled(false);
         }
         private void RestoreItems(bool documentsOnly)
         { if (items != null) foreach (var item in items) if (item != null && (!documentsOnly || item.Kind == DeskItemKind.Document)) item.RestorePosition(); }
         private void RefreshInput()
         {
-            bool stable = isActiveAndEnabled && externalAllowed && !IsBusy && (context == null || !context.HasPointerCapture);
+            bool inputAllowed = isActiveAndEnabled && externalAllowed && !IsBusy;
+            bool stable = inputAllowed && (context == null || !context.HasPointerCapture);
             bool open = focus != null && focus.IsOpen;
-            dialoguePanel?.SetInputEnabled(stable && !open && Mode == DeskMode.Dialogue);
-            focus?.SetInputEnabled(stable && (Mode == DeskMode.Review || (open && !focus.IsDocumentFocus)));
-            mobileDevice?.SetInputEnabled(stable && IsModalOpen && Mode == DeskMode.Review);
-            if (documentsGroup != null) documentsGroup.interactable = documentsGroup.blocksRaycasts = stable && !open && Mode == DeskMode.Review;
+            if (dialoguePanel != null) dialoguePanel.SetInputEnabled(stable && !open && Mode == DeskMode.Dialogue);
+            if (focus != null) focus.SetInputEnabled(stable && (Mode == DeskMode.Review || (open && !focus.IsDocumentFocus)));
+            if (mobileDevice != null) mobileDevice.SetInputEnabled(stable && IsModalOpen && Mode == DeskMode.Review);
+            // Keep the pressed document hittable until release so the EventSystem can route its click.
+            // DeskItem's context capture still rejects competing presses and suppresses dragged clicks.
+            if (documentsGroup != null) documentsGroup.interactable = documentsGroup.blocksRaycasts = inputAllowed && !open && Mode == DeskMode.Review;
             if (restartButton != null) restartButton.interactable = stable && !open;
         }
         [TabGroup("InspectorTabs", "개발 도구"), Button("문서 확대"), DisableInEditorMode]
